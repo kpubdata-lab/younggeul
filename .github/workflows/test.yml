@@ -14,7 +14,7 @@ jobs:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@v4
       - name: Install dependencies
-        run: uv pip install --system -e ".[dev]"
+        run: uv pip install --system -e ".[dev,kr-seoul-apartment]"
       - name: Run unit tests
         run: pytest -m "not slow and not integration" --cov --cov-report=xml
       - name: Upload coverage

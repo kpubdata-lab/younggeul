@@ -24,6 +24,11 @@ dev = [
   "ruff",
   "mypy",
   "pre-commit",
+  "pandas-stubs",
+]
+kr-seoul-apartment = [
+  "PublicDataReader>=1.1",
+  "pandas>=2.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -49,6 +54,10 @@ warn_required_dynamic_aliases = true
 [[tool.mypy.overrides]]
 module = ["core.*"]
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["PublicDataReader", "PublicDataReader.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
