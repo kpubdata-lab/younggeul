@@ -1,0 +1,33 @@
+name: ADR Proposal
+description: Propose an Architecture Decision Record
+title: "[ADR]: "
+labels: ["type:adr"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why is this decision needed? What problem are we solving?
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Proposed Decision
+      description: What do you propose?
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Expected Consequences
+      description: What are the positive and negative consequences?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other options were evaluated?
+    validations:
+      required: false
