@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "younggeul"
+version = "0.1.0"
+description = "YOLO Mortgage Simulator monorepo"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2.0",
+  "langgraph>=0.2",
+  "litellm",
+  "opentelemetry-api",
+  "opentelemetry-sdk",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "pytest-asyncio",
+  "ruff",
+  "mypy",
+  "pre-commit",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+  "core/src/younggeul_core",
+  "apps/kr-seoul-apartment/src/younggeul_app_kr_seoul_apartment",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+
+[[tool.mypy.overrides]]
+module = ["core.*"]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = [
+  "core/tests",
+  "apps/kr-seoul-apartment/tests",
+]
+markers = [
+  "slow: marks tests as slow",
+  "integration: marks integration tests",
+]

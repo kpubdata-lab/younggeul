@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+
+# Data artifacts
+data/bronze/**
+data/silver/**
+data/gold/**
+data/snapshots/**
+!data/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
