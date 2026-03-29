@@ -1,3 +1,5 @@
+"""Tracing initialization and span helpers for simulation nodes."""
+
 from __future__ import annotations
 
 import os
@@ -16,6 +18,8 @@ def _is_enabled() -> bool:
 
 
 def init_tracing() -> None:
+    """Initialize OpenTelemetry tracing when OTEL is enabled."""
+
     global _initialized
 
     if _initialized or not _is_enabled():
@@ -42,6 +46,11 @@ def init_tracing() -> None:
 
 
 def get_tracer() -> Tracer:
+    """Return the simulation tracer instance.
+
+    Returns:
+        OpenTelemetry tracer for simulation spans.
+    """
     return trace.get_tracer(_TRACER_NAME)
 
 
@@ -53,6 +62,17 @@ def trace_node(
     round_no: int | None = None,
     attributes: dict[str, Any] | None = None,
 ) -> Iterator[Span]:
+    """Create a tracing span around simulation node execution.
+
+    Args:
+        node_name: Name of the node being traced.
+        run_id: Optional simulation run identifier.
+        round_no: Optional simulation round number.
+        attributes: Optional additional span attributes.
+
+    Yields:
+        Active span context for the node execution block.
+    """
     tracer = get_tracer()
 
     span_attributes: dict[str, Any] = {"node.name": node_name}

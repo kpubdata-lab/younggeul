@@ -1,3 +1,5 @@
+"""CLI entrypoints for ingest, snapshot, baseline, and simulation workflows."""
+
 from __future__ import annotations
 
 import json
@@ -192,6 +194,7 @@ def _extract_rendered_report(
 @click.option("--version", is_flag=True, is_eager=True, callback=_emit_version, expose_value=False)
 @click.pass_context
 def main(ctx: click.Context, output: str) -> None:
+    """Run the top-level Younggeul CLI group."""
     ctx.ensure_object(dict)
     ctx.obj["output"] = output
 
@@ -205,6 +208,7 @@ def main(ctx: click.Context, output: str) -> None:
 )
 @click.pass_context
 def ingest_command(ctx: click.Context, output_dir: Path) -> None:
+    """Ingest fixture Bronze data and write Gold JSONL output."""
     try:
         bronze = _fixture_bronze_input()
         result = run_pipeline(bronze)
@@ -245,6 +249,7 @@ def ingest_command(ctx: click.Context, output_dir: Path) -> None:
 
 @main.group("snapshot")
 def snapshot_group() -> None:
+    """Manage dataset snapshots used by downstream commands."""
     pass
 
 
@@ -262,6 +267,7 @@ def snapshot_group() -> None:
 )
 @click.pass_context
 def snapshot_publish_command(ctx: click.Context, data_dir: Path, snapshot_dir: Path) -> None:
+    """Publish a snapshot from Gold JSONL files in a data directory."""
     try:
         gold_rows = _load_gold_rows(data_dir)
         snapshot_ref = publish_snapshot(gold_rows, snapshot_dir)
@@ -295,6 +301,7 @@ def snapshot_publish_command(ctx: click.Context, data_dir: Path, snapshot_dir: P
 )
 @click.pass_context
 def snapshot_list_command(ctx: click.Context, snapshot_dir: Path) -> None:
+    """List available dataset snapshots from the snapshot directory."""
     try:
         items: list[dict[str, Any]] = []
         if snapshot_dir.exists():
@@ -362,6 +369,7 @@ def snapshot_list_command(ctx: click.Context, snapshot_dir: Path) -> None:
 )
 @click.pass_context
 def baseline_command(ctx: click.Context, snapshot_id: str, snapshot_dir: Path, output_dir: Path) -> None:
+    """Generate baseline forecasts from a stored snapshot."""
     try:
         manifest, metrics = resolve_snapshot(snapshot_id, snapshot_dir)
         snapshot_ref = _snapshot_ref_from_manifest(manifest)
@@ -402,6 +410,7 @@ def baseline_command(ctx: click.Context, snapshot_id: str, snapshot_dir: Path, o
 )
 @click.pass_context
 def simulate_command(ctx: click.Context, query: str, max_rounds: int, run_name: str, output_dir: Path) -> None:
+    """Run the simulation graph and save a rendered Markdown report."""
     try:
         event_store = InMemoryEventStore()
         evidence_store = InMemoryEvidenceStore()
@@ -438,6 +447,7 @@ def simulate_command(ctx: click.Context, query: str, max_rounds: int, run_name: 
 @click.option("--report-file", type=click.Path(path_type=Path, dir_okay=False), required=True)
 @click.pass_context
 def report_command(ctx: click.Context, report_file: Path) -> None:
+    """Print an existing report file to the selected output format."""
     try:
         if not report_file.exists() or not report_file.is_file():
             raise click.ClickException(f"Report file not found: {report_file}")
@@ -454,6 +464,7 @@ def report_command(ctx: click.Context, report_file: Path) -> None:
 @click.option("--output-dir", type=str, default="eval_results", show_default=True)
 @click.pass_context
 def eval_command(ctx: click.Context, output_dir: str) -> None:
+    """Execute eval-marked tests and persist evaluation summaries."""
     try:
         base_dir = Path(output_dir)
         base_dir.mkdir(parents=True, exist_ok=True)

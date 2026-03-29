@@ -192,7 +192,14 @@ class KostatMigrationConnector:
         self._now_fn = now_fn
 
     def fetch(self, request: KostatMigrationRequest) -> ConnectorResult[BronzeMigration]:
-        """Fetch migration data for one month (all 시도 regions)."""
+        """Fetch migration data for one month (all 시도 regions).
+
+        Args:
+            request: Partition-scoped KOSTAT query configuration.
+
+        Returns:
+            Connector result containing Bronze migration records and ingest manifest.
+        """
         now = self._now_fn()
 
         def _call_api() -> pd.DataFrame:

@@ -1,3 +1,7 @@
+# pyright: reportMissingImports=false
+
+"""Scenario builder node for assembling scenario and roster inputs."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
@@ -23,6 +27,14 @@ _SENTIMENT_SET = {"bearish", "neutral", "bullish"}
 
 
 class ScenarioSelection(BaseModel):
+    """Structured LLM output used to select shocks and participant buckets.
+
+    Attributes:
+        scenario_name: Human-readable scenario name.
+        selected_shock_keys: Shock catalog keys selected for the scenario.
+        roster_buckets: Role bucket specifications for participant generation.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     scenario_name: str
@@ -31,6 +43,16 @@ class ScenarioSelection(BaseModel):
 
 
 def compute_max_rounds(horizon_months: int, shock_count: int, analysis_mode: str) -> int:
+    """Compute the simulation round limit from intake characteristics.
+
+    Args:
+        horizon_months: Requested simulation horizon in months.
+        shock_count: Number of selected shocks.
+        analysis_mode: Intake analysis mode.
+
+    Returns:
+        Bounded max round count for the simulation.
+    """
     base = ceil(horizon_months / 3)
     if shock_count >= 2:
         base += 1
@@ -183,6 +205,20 @@ def make_scenario_builder_node(
     structured_llm: StructuredLLM,
     snapshot_reader: SnapshotReader,
 ) -> Any:
+    """Create the scenario builder node for the simulation graph.
+
+    The scenario builder node resolves target districts, selects shocks, builds
+    a participant roster, and emits a scenario-built event.
+
+    Args:
+        event_store: Event store used to publish scenario construction events.
+        structured_llm: Structured LLM transport used for scenario selection.
+        snapshot_reader: Snapshot reader used to obtain coverage constraints.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         intake_plan_raw = state.get("intake_plan")
         if intake_plan_raw is None:

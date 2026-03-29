@@ -1,3 +1,5 @@
+"""Silver normalization for apartment transaction Bronze records."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -37,6 +39,14 @@ SEOUL_GU_CODES: dict[str, str] = {
 
 
 def parse_deal_amount(raw: str | None) -> int | None:
+    """Parse 거래금액 text into KRW integer value.
+
+    Args:
+        raw: Raw deal amount string from Bronze data.
+
+    Returns:
+        Parsed amount in KRW, or ``None`` when parsing fails.
+    """
     if raw is None:
         return None
     cleaned = raw.replace(",", "").strip()
@@ -50,6 +60,16 @@ def parse_deal_amount(raw: str | None) -> int | None:
 
 
 def parse_deal_date(year: str | None, month: str | None, day: str | None) -> date | None:
+    """Parse year, month, and day strings into a date.
+
+    Args:
+        year: Raw year value.
+        month: Raw month value.
+        day: Raw day value.
+
+    Returns:
+        Parsed transaction date, or ``None`` if invalid.
+    """
     y = parse_int(year)
     m = parse_int(month)
     d = parse_int(day)
@@ -62,6 +82,14 @@ def parse_deal_date(year: str | None, month: str | None, day: str | None) -> dat
 
 
 def parse_int(raw: str | None) -> int | None:
+    """Parse a stripped string into an integer.
+
+    Args:
+        raw: Raw numeric string.
+
+    Returns:
+        Parsed integer value, or ``None`` if invalid.
+    """
     if raw is None:
         return None
     cleaned = raw.strip()
@@ -74,6 +102,14 @@ def parse_int(raw: str | None) -> int | None:
 
 
 def parse_decimal(raw: str | None) -> Decimal | None:
+    """Parse a stripped string into a Decimal.
+
+    Args:
+        raw: Raw decimal string.
+
+    Returns:
+        Parsed decimal value, or ``None`` if invalid.
+    """
     if raw is None:
         return None
     cleaned = raw.strip()
@@ -86,24 +122,56 @@ def parse_decimal(raw: str | None) -> Decimal | None:
 
 
 def derive_gu_code(sgg_code: str | None) -> str | None:
+    """Resolve a Seoul 구 code from the provided sigungu code.
+
+    Args:
+        sgg_code: Raw sigungu code.
+
+    Returns:
+        Valid Seoul 구 code, or ``None`` when not supported.
+    """
     if sgg_code in SEOUL_GU_CODES:
         return sgg_code
     return None
 
 
 def derive_gu_name(gu_code: str | None) -> str | None:
+    """Resolve a Seoul 구 name from a 구 code.
+
+    Args:
+        gu_code: Seoul 구 code.
+
+    Returns:
+        Matched 구 name, or ``None`` when unknown.
+    """
     if gu_code is None:
         return None
     return SEOUL_GU_CODES.get(gu_code)
 
 
 def is_cancelled(cancel_deal_type: str | None) -> bool:
+    """Determine whether a transaction is marked as canceled.
+
+    Args:
+        cancel_deal_type: Raw cancel marker from Bronze data.
+
+    Returns:
+        ``True`` when cancellation marker is present, otherwise ``False``.
+    """
     if cancel_deal_type is None:
         return False
     return bool(cancel_deal_type.strip())
 
 
 def generate_transaction_id(bronze: BronzeAptTransaction) -> str:
+    """Generate a deterministic transaction identifier.
+
+    Args:
+        bronze: Source Bronze apartment transaction record.
+
+    Returns:
+        SHA-256 hash-based transaction identifier.
+    """
     payload = [
         {
             "sgg_code": bronze.sgg_code,
@@ -120,6 +188,15 @@ def generate_transaction_id(bronze: BronzeAptTransaction) -> str:
 
 
 def compute_quality_score(bronze: BronzeAptTransaction, silver_fields: dict[str, object]) -> SilverDataQualityScore:
+    """Compute Silver data quality scores for one transaction.
+
+    Args:
+        bronze: Source Bronze apartment transaction record.
+        silver_fields: Parsed Silver field values used for scoring.
+
+    Returns:
+        Completeness, consistency, and overall quality score values.
+    """
     _ = bronze
 
     completeness_fields = (
@@ -184,6 +261,14 @@ def _parse_cancel_date(raw: str | None) -> date | None:
 
 
 def normalize_apt_transaction(bronze: BronzeAptTransaction) -> SilverAptTransaction | None:
+    """Normalize one Bronze apartment transaction into Silver shape.
+
+    Args:
+        bronze: Source Bronze apartment transaction record.
+
+    Returns:
+        Normalized Silver apartment transaction, or ``None`` if invalid.
+    """
     gu_code = derive_gu_code(bronze.sgg_code)
     if gu_code is None:
         return None
@@ -241,6 +326,14 @@ def normalize_apt_transaction(bronze: BronzeAptTransaction) -> SilverAptTransact
 
 
 def normalize_batch(records: list[BronzeAptTransaction]) -> list[SilverAptTransaction]:
+    """Normalize a batch of Bronze apartment transactions.
+
+    Args:
+        records: Bronze apartment transaction records.
+
+    Returns:
+        Successfully normalized Silver apartment transactions.
+    """
     normalized: list[SilverAptTransaction] = []
     for record in records:
         silver = normalize_apt_transaction(record)

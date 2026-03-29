@@ -1,3 +1,5 @@
+"""Utilities for resolving Seoul district identifiers from user hints."""
+
 from __future__ import annotations
 
 SEOUL_GU_MAP: dict[str, str] = {
@@ -34,6 +36,15 @@ def resolve_gu_codes(
     geography_hint: str | None,
     available_gu_codes: list[str],
 ) -> tuple[list[str], list[str]]:
+    """Resolve target district codes from a free-form geography hint.
+
+    Args:
+        geography_hint: Free-form district hint from the user query.
+        available_gu_codes: District codes available in snapshot coverage.
+
+    Returns:
+        A tuple of resolved district codes and warning messages.
+    """
     if geography_hint is None:
         return list(available_gu_codes), []
 

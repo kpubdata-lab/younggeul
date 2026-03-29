@@ -171,7 +171,14 @@ class BokInterestRateConnector:
         self._now_fn = now_fn
 
     def fetch(self, request: BokInterestRateRequest) -> ConnectorResult[BronzeInterestRate]:
-        """Fetch interest rate data for one series over a date range."""
+        """Fetch interest rate data for one series over a date range.
+
+        Args:
+            request: Partition-scoped BOK query configuration.
+
+        Returns:
+            Connector result containing Bronze interest-rate records and ingest manifest.
+        """
         now = self._now_fn()
 
         def _call_api() -> pd.DataFrame:

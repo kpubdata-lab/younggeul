@@ -1,3 +1,5 @@
+"""Shared event and event-store interfaces for simulation runs."""
+
 from __future__ import annotations
 
 from datetime import datetime

@@ -1,3 +1,5 @@
+"""Round resolver node that applies actions and updates world state."""
+
 from __future__ import annotations
 
 # pyright: reportMissingImports=false
@@ -48,6 +50,18 @@ def _copy_segment(
 
 
 def make_round_resolver_node(event_store: EventStore) -> Any:
+    """Create the round resolver node for the simulation graph.
+
+    The round resolver node validates participant actions, resolves simulated
+    transactions, and emits a round outcome event.
+
+    Args:
+        event_store: Event store used to publish round resolution events.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         run_meta = state.get("run_meta")
         if run_meta is None:

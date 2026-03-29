@@ -1,3 +1,5 @@
+"""Baseline forecasting and report generation for district-level Gold metrics."""
+
 from __future__ import annotations
 
 import json
@@ -21,6 +23,14 @@ def _next_period(period: str) -> str:
 
 
 def forecast_baseline(metrics: list[GoldDistrictMonthlyMetrics]) -> list[BaselineForecast]:
+    """Generate one-step baseline forecasts per district.
+
+    Args:
+        metrics: Historical district monthly metrics used for trend scoring.
+
+    Returns:
+        Baseline forecast rows, one per district when input data exists.
+    """
     if not metrics:
         return []
 
@@ -102,6 +112,16 @@ def generate_baseline_report(
     forecasts: list[BaselineForecast],
     output_dir: Path,
 ) -> Path:
+    """Write a baseline forecast report JSON file.
+
+    Args:
+        snapshot_ref: Snapshot metadata used to label the report.
+        forecasts: Forecast rows to include in the report payload.
+        output_dir: Directory where the report file will be written.
+
+    Returns:
+        Path to the generated report file.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / f"baseline_report_{snapshot_ref.dataset_snapshot_id[:12]}.json"
 

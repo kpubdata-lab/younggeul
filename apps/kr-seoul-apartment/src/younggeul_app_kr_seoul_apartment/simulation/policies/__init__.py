@@ -1,3 +1,5 @@
+"""Participant policy interfaces and default heuristic implementations."""
+
 from __future__ import annotations
 
 from .heuristic import BrokerPolicy, BuyerPolicy, InvestorPolicy, LandlordPolicy, TenantPolicy

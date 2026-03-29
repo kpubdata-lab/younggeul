@@ -171,7 +171,14 @@ class MolitAptConnector:
         self._now_fn = now_fn
 
     def fetch(self, request: MolitAptRequest) -> ConnectorResult[BronzeAptTransaction]:
-        """Fetch apartment transactions for one sigungu + one month."""
+        """Fetch apartment transactions for one sigungu + one month.
+
+        Args:
+            request: Partition-scoped MOLIT query configuration.
+
+        Returns:
+            Connector result containing Bronze apartment records and ingest manifest.
+        """
         now = self._now_fn()
 
         # Retry wraps only the API call; rate limit inside retried callable

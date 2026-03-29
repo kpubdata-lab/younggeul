@@ -1,3 +1,5 @@
+"""Evidence builder node that materializes report evidence records."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -9,6 +11,18 @@ from ..graph_state import SimulationGraphState
 
 
 def make_evidence_builder_node(evidence_store: EvidenceStore) -> Any:
+    """Create the evidence builder node for the simulation graph.
+
+    The evidence builder node derives evidence records from final world state,
+    participant state, and outcomes for downstream report generation.
+
+    Args:
+        evidence_store: Evidence storage backend used to persist records.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         run_meta = state.get("run_meta")
         if run_meta is None:

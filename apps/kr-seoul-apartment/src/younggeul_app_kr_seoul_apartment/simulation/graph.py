@@ -1,3 +1,7 @@
+# pyright: reportMissingImports=false
+
+"""Simulation graph construction and default node wiring."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
@@ -59,6 +63,18 @@ def build_simulation_graph(
     snapshot_reader: SnapshotReader | None = None,
     evidence_store: EvidenceStore | None = None,
 ) -> CompiledStateGraph[Any, Any, Any, Any]:
+    """Build and compile the LangGraph simulation workflow.
+
+    Args:
+        event_store: Event persistence backend.
+        default_max_rounds: Fallback round limit when not provided by state.
+        structured_llm: Optional structured LLM transport for planning nodes.
+        snapshot_reader: Optional snapshot access port for data-backed nodes.
+        evidence_store: Optional evidence store implementation.
+
+    Returns:
+        A compiled simulation state graph.
+    """
     graph = StateGraph(SimulationGraphState)
     _evidence_store = evidence_store or InMemoryEvidenceStore()
 

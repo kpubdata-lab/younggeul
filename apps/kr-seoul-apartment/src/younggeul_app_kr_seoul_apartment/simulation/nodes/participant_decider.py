@@ -1,3 +1,5 @@
+"""Participant decision node for producing market action proposals."""
+
 from __future__ import annotations
 
 # pyright: reportMissingImports=false
@@ -73,6 +75,18 @@ def make_participant_decider_node(
     *,
     policy_registry: Callable[[str], ParticipantPolicy] | None = None,
 ) -> Any:
+    """Create the participant decider node for the simulation graph.
+
+    The participant decider node applies role policies to generate per-
+    participant market actions for the current round.
+
+    Args:
+        event_store: Event store used to publish decision events.
+        policy_registry: Optional role-to-policy resolver.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
     policy_lookup = policy_registry or get_default_policy
 
     def node(state: SimulationGraphState) -> dict[str, Any]:

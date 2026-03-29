@@ -1,3 +1,5 @@
+"""Public evidence schemas and SQL table definitions."""
+
 from younggeul_core.evidence.schemas import ClaimRecord, EvidenceRecord, GateResult
 from younggeul_core.evidence.sql import CLAIMS_TABLE_SQL, EVIDENCE_TABLE_SQL, GATE_RESULTS_TABLE_SQL
 

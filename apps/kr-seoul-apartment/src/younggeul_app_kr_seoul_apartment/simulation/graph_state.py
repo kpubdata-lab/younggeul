@@ -1,3 +1,7 @@
+# pyright: reportMissingImports=false
+
+"""Graph-state schema helpers for simulation orchestration."""
+
 from __future__ import annotations
 
 import operator
@@ -21,6 +25,8 @@ from younggeul_core.state.simulation import (
 
 
 class SimulationGraphState(TypedDict, total=False):
+    """Mutable state payload passed between simulation graph nodes."""
+
     user_query: str
     intake_plan: dict[str, Any]
     participant_roster: dict[str, Any]
@@ -73,6 +79,17 @@ _REQUIRED_INITIALIZED_KEYS = {
 
 
 def seed_graph_state(user_query: str, run_id: str, run_name: str, model_id: str) -> SimulationGraphState:
+    """Create an initial graph state for a simulation run.
+
+    Args:
+        user_query: Original user query for the simulation.
+        run_id: Stable run identifier.
+        run_name: Human-readable run name.
+        model_id: Model identifier used for the run.
+
+    Returns:
+        Seed graph state with run metadata and empty accumulators.
+    """
     return {
         "user_query": user_query,
         "run_meta": RunMeta(
@@ -89,6 +106,17 @@ def seed_graph_state(user_query: str, run_id: str, run_name: str, model_id: str)
 
 
 def to_simulation_state(graph_state: SimulationGraphState) -> SimulationState:
+    """Convert initialized graph state into a validated SimulationState.
+
+    Args:
+        graph_state: Graph state to convert.
+
+    Returns:
+        Validated simulation state payload.
+
+    Raises:
+        ValueError: When required fields are missing or schema validation fails.
+    """
     if not validate_initialized_state(graph_state):
         raise ValueError("Simulation graph state is not initialized")
 
@@ -101,5 +129,13 @@ def to_simulation_state(graph_state: SimulationGraphState) -> SimulationState:
 
 
 def validate_initialized_state(graph_state: SimulationGraphState) -> bool:
+    """Check whether required graph-state fields are initialized.
+
+    Args:
+        graph_state: Graph state to validate.
+
+    Returns:
+        ``True`` when all required initialized keys are present and non-null.
+    """
     state_dict: dict[str, object] = dict(graph_state)
     return all(key in state_dict and state_dict[key] is not None for key in _REQUIRED_INITIALIZED_KEYS)
