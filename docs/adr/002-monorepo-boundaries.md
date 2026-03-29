@@ -14,6 +14,8 @@ The Younggeul project must simultaneously support:
 
 Without clear package boundaries, these components could become tightly coupled. For instance, if the core platform depends on Seoul-specific apartment data schemas, it becomes difficult to extend the system to other asset types or countries.
 
+The repository also needs a single source of truth for tooling, testing, linting, and dependency definitions. A fragmented structure would increase CI complexity and make cross-package refactors slow and error-prone. We therefore need explicit dependency direction and packaging conventions that are easy to enforce and audit.
+
 ## Decision
 We will adopt a **Monorepo Structure** with three distinct top-level directories, each with its own package definition and clear dependency directions.
 
@@ -27,6 +29,90 @@ We will adopt a **Monorepo Structure** with three distinct top-level directories
 2.  **Apps Build on Core**: Packages in `apps/` import from `core/`. They provide the concrete implementation of the abstract interfaces defined in core.
 3.  **Benchmarks Evaluate Both**: Packages in `benchmarks/` may import from both `core/` and any package in `apps/` to run full end-to-end evaluation cycles.
 4.  **No Cross-App Imports**: Packages within `apps/` should not depend on each other (e.g., `kr-seoul-apartment` should not import from `kr-daegu-commercial`). Common logic between apps should be promoted to `core/`.
+
+## Alternatives Considered
+### A) Polyrepo with separate git repositories
+- **Pros**
+  - Strong physical isolation between packages.
+  - Independent release cadence per repository.
+- **Cons**
+  - High overhead for synchronized changes across core/apps/benchmarks.
+  - Duplicated CI templates and tooling configs.
+  - Harder local development and integration testing.
+
+### B) Single package with submodules/namespaces only
+- **Pros**
+  - Minimal packaging complexity.
+  - One install target for all functionality.
+- **Cons**
+  - Weak architectural boundary enforcement.
+  - Higher risk of accidental reverse dependencies into `core`.
+  - Difficult to reason about ownership and extension points.
+
+### C) Monorepo with workspace-style layout (Selected)
+- **Pros**
+  - Shared tooling and unified quality gates.
+  - Fast cross-cutting refactors with atomic commits.
+  - Clear dependency rules by directory/package role.
+- **Cons**
+  - Requires discipline to prevent boundary erosion.
+  - CI may need path-aware optimization as repository grows.
+
+## Rationale
+The monorepo model best supports Younggeul’s current scale and roadmap. We need cohesive iteration across shared schemas (`younggeul_core`), application behavior (`younggeul_app_kr_seoul_apartment`), and evaluation paths (`benchmarks/kr-housing`). This is easiest when all components evolve in one repository with a consistent toolchain.
+
+The decisive constraint is controlled dependency direction. `core` must remain geography-agnostic; `apps` can specialize by geography/asset; `benchmarks` can compose both for end-to-end verification. This minimizes accidental coupling while retaining development velocity.
+
+`pyproject.toml` already reflects this organization by declaring package roots and test paths spanning `core`, `apps`, and `benchmarks`.
+
+## Examples
+### 1) Actual repository directory structure
+
+```text
+/data/GitHub/younggeul/
+├── core/
+│   ├── src/
+│   └── tests/
+├── apps/
+│   └── kr-seoul-apartment/
+└── benchmarks/
+    └── kr-housing/
+```
+
+### 2) Workspace/package configuration in `pyproject.toml`
+
+```toml
+[tool.hatch.build.targets.wheel]
+packages = [
+  "core/src/younggeul_core",
+  "apps/kr-seoul-apartment/src/younggeul_app_kr_seoul_apartment",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "core/tests",
+  "apps/kr-seoul-apartment/tests",
+]
+pythonpath = [
+  "core/src",
+  "apps/kr-seoul-apartment/src",
+  "benchmarks/kr-housing/src",
+]
+```
+
+### 3) Allowed import direction: `apps` importing from `core`
+
+```python
+# apps/kr-seoul-apartment/.../simulation/graph_state.py
+from younggeul_core.state.simulation import (
+    ActionProposal,
+    ParticipantState,
+    ReportClaim,
+    RoundOutcome,
+)
+```
+
+This import direction is intentional: application packages consume generic core contracts and provide concrete domain behavior.
 
 ## Consequences
 ### Positive
