@@ -1,12 +1,45 @@
 name: CodeQL Analysis
-# Stub — activate in M9-03
+
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   schedule:
     - cron: "0 4 * * 0" # Sunday 4 AM UTC
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
 jobs:
   analyze:
+    name: CodeQL Analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
     steps:
-      - run: echo "Stub — activate in milestone M9 (Observability & Security)"
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-extended
+          config: |
+            paths-ignore:
+              - "**/__pycache__/**"
+              - "**/node_modules/**"
+              - "eval_results/**"
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
