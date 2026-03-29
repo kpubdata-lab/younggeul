@@ -196,4 +196,4 @@ def _is_legacy_stub_claims(report_claims: list[ReportClaim]) -> bool:
     if len(report_claims) != 1:
         return False
     claim_json = report_claims[0].claim_json
-    return claim_json == {"summary": "stub report"}
+    return bool(claim_json == {"summary": "stub report"})

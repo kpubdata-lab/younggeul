@@ -184,7 +184,7 @@ def generate_transaction_id(bronze: BronzeAptTransaction) -> str:
             "serial_number": bronze.serial_number,
         }
     ]
-    return sha256_payload(payload)
+    return str(sha256_payload(payload))
 
 
 def compute_quality_score(bronze: BronzeAptTransaction, silver_fields: dict[str, object]) -> SilverDataQualityScore:
