@@ -1,0 +1,15 @@
+{% for run in runs %}
+  <tr>
+    <td><code>{{ run.run_id[:8] }}...</code></td>
+    <td>{{ run.query }}</td>
+    <td>
+      <span class="badge badge-{{ run.status }}">{{ run.status }}</span>
+    </td>
+    <td>{{ run.created_at }}</td>
+    <td><a href="/ui/simulate/{{ run.run_id }}">View</a></td>
+  </tr>
+{% else %}
+  <tr>
+    <td colspan="5" class="muted">아직 실행된 시뮬레이션이 없습니다.</td>
+  </tr>
+{% endfor %}

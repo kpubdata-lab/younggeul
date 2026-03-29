@@ -1,0 +1,11 @@
+<h2>실행이 생성되었습니다</h2>
+<p>
+  Run ID: <code>{{ run_id }}</code><br>
+  상세 페이지: <a href="{{ run_url }}">{{ run_url }}</a>
+</p>
+<div
+  id="run-status"
+  hx-get="/ui/partials/runs/{{ run_id }}"
+  hx-trigger="load, every 2s"
+  hx-swap="innerHTML"
+></div>
