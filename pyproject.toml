@@ -9,12 +9,16 @@ description = "YOLO Mortgage Simulator monorepo"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+  "click>=8.0",
   "pydantic>=2.0",
   "langgraph>=0.6,<0.7",
   "litellm",
   "opentelemetry-api",
   "opentelemetry-sdk",
 ]
+
+[project.scripts]
+younggeul = "younggeul_app_kr_seoul_apartment.cli:main"
 
 [project.optional-dependencies]
 dev = [
