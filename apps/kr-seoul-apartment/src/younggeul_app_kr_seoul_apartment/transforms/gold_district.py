@@ -1,3 +1,5 @@
+"""Gold aggregation from Silver transactions, rates, and migration."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -56,6 +58,16 @@ def aggregate_district_monthly(
     interest_rates: list[SilverInterestRate] | None = None,
     migrations: list[SilverMigration] | None = None,
 ) -> list[GoldDistrictMonthlyMetrics]:
+    """Aggregate district-level monthly Gold metrics.
+
+    Args:
+        transactions: Silver apartment transactions to aggregate.
+        interest_rates: Optional Silver interest-rate rows used for enrichment.
+        migrations: Optional Silver migration rows used for enrichment.
+
+    Returns:
+        District monthly Gold metrics derived from the provided Silver inputs.
+    """
     grouped = _group_transactions(transactions)
     if not grouped:
         return []

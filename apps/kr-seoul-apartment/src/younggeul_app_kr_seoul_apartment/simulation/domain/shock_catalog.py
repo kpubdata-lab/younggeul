@@ -1,3 +1,7 @@
+# pyright: reportMissingImports=false
+
+"""Shock catalog helpers for scenario shock normalization and expansion."""
+
 from __future__ import annotations
 
 from typing import Literal, TypedDict
@@ -72,6 +76,14 @@ KOREAN_SHOCK_ALIASES: dict[str, str] = {
 
 
 def normalize_shock_key(raw: str) -> str | None:
+    """Normalize a user-provided shock key to a supported catalog key.
+
+    Args:
+        raw: Raw shock key or alias from user or model output.
+
+    Returns:
+        The canonical shock key when supported, otherwise ``None``.
+    """
     candidate = raw.strip().lower()
     if candidate in SUPPORTED_SHOCK_KEYS:
         return candidate
@@ -86,6 +98,17 @@ def expand_shock(
     start_period: str,
     end_period: str | None,
 ) -> Shock:
+    """Expand a catalog shock key into a simulation Shock object.
+
+    Args:
+        key: Canonical shock key present in the supported catalog.
+        target_gus: Target district codes affected by the shock.
+        start_period: Scenario start period in YYYY-MM format.
+        end_period: Scenario end period in YYYY-MM format.
+
+    Returns:
+        A normalized simulation shock definition.
+    """
     del start_period
     del end_period
     template = SUPPORTED_SHOCK_KEYS[key]

@@ -1,5 +1,7 @@
 # pyright: reportMissingImports=false
 
+"""Report writer node that transforms evidence into report claims."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -50,6 +52,19 @@ def _claim_json(
 
 
 def make_report_writer_node(evidence_store: EvidenceStore, event_store: EventStore) -> Any:
+    """Create the report writer node for the simulation graph.
+
+    The report writer node composes citation-ready report claims from evidence
+    records and current simulation state.
+
+    Args:
+        evidence_store: Evidence store used to query generated evidence.
+        event_store: Event store used to publish report writing events.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         run_meta = state.get("run_meta")
         if run_meta is None:

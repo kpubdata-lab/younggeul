@@ -1,3 +1,5 @@
+"""Heuristic participant policies for simulation action selection."""
+
 from __future__ import annotations
 
 # pyright: reportMissingImports=false
@@ -37,7 +39,18 @@ def _proposal(
 
 
 class BuyerPolicy(ParticipantPolicy):
+    """Policy for primary buyers reacting to sentiment and trend."""
+
     def decide(self, participant: ParticipantState, context: DecisionContext) -> ActionProposal:
+        """Choose a buyer action for the current round.
+
+        Args:
+            participant: Buyer participant state.
+            context: Decision context for this round.
+
+        Returns:
+            Action proposal for the buyer.
+        """
         segment = context.segment
         should_buy = segment.sentiment_index > 0.5 and segment.price_trend != "down" and participant.capital > 0
         intensity = participant.risk_tolerance * segment.sentiment_index
@@ -62,7 +75,18 @@ class BuyerPolicy(ParticipantPolicy):
 
 
 class InvestorPolicy(ParticipantPolicy):
+    """Policy for investors balancing momentum and downside risk."""
+
     def decide(self, participant: ParticipantState, context: DecisionContext) -> ActionProposal:
+        """Choose an investor action for the current round.
+
+        Args:
+            participant: Investor participant state.
+            context: Decision context for this round.
+
+        Returns:
+            Action proposal for the investor.
+        """
         segment = context.segment
 
         if segment.price_trend == "up" and segment.sentiment_index > 0.6:
@@ -96,7 +120,18 @@ class InvestorPolicy(ParticipantPolicy):
 
 
 class TenantPolicy(ParticipantPolicy):
+    """Policy for tenants in v0.1, currently non-trading."""
+
     def decide(self, participant: ParticipantState, context: DecisionContext) -> ActionProposal:
+        """Choose a tenant action for the current round.
+
+        Args:
+            participant: Tenant participant state.
+            context: Decision context for this round.
+
+        Returns:
+            Action proposal for the tenant.
+        """
         return _proposal(
             participant=participant,
             context=context,
@@ -107,7 +142,18 @@ class TenantPolicy(ParticipantPolicy):
 
 
 class LandlordPolicy(ParticipantPolicy):
+    """Policy for landlords focusing on risk-off selling signals."""
+
     def decide(self, participant: ParticipantState, context: DecisionContext) -> ActionProposal:
+        """Choose a landlord action for the current round.
+
+        Args:
+            participant: Landlord participant state.
+            context: Decision context for this round.
+
+        Returns:
+            Action proposal for the landlord.
+        """
         sentiment_index = context.segment.sentiment_index
         intensity = (1.0 - sentiment_index) * participant.risk_tolerance
 
@@ -130,7 +176,18 @@ class LandlordPolicy(ParticipantPolicy):
 
 
 class BrokerPolicy(ParticipantPolicy):
+    """Policy for brokers in v0.1, currently non-trading."""
+
     def decide(self, participant: ParticipantState, context: DecisionContext) -> ActionProposal:
+        """Choose a broker action for the current round.
+
+        Args:
+            participant: Broker participant state.
+            context: Decision context for this round.
+
+        Returns:
+            Action proposal for the broker.
+        """
         return _proposal(
             participant=participant,
             context=context,

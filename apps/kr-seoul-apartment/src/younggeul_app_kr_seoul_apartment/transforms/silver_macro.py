@@ -1,3 +1,5 @@
+"""Silver normalization for macroeconomic Bronze records."""
+
 from __future__ import annotations
 
 import re
@@ -11,6 +13,14 @@ _PERIOD_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
 
 def parse_date(raw: str | None) -> date | None:
+    """Parse an ISO-formatted date string.
+
+    Args:
+        raw: Raw date string.
+
+    Returns:
+        Parsed date value, or ``None`` when invalid.
+    """
     if raw is None:
         return None
     cleaned = raw.strip()
@@ -23,6 +33,14 @@ def parse_date(raw: str | None) -> date | None:
 
 
 def parse_decimal_2dp(raw: str | None) -> Decimal | None:
+    """Parse decimal text and quantize to two decimal places.
+
+    Args:
+        raw: Raw decimal value string.
+
+    Returns:
+        Parsed and quantized decimal value, or ``None`` if invalid.
+    """
     if raw is None:
         return None
     cleaned = raw.strip()
@@ -35,6 +53,14 @@ def parse_decimal_2dp(raw: str | None) -> Decimal | None:
 
 
 def parse_count(raw: str | None) -> int | None:
+    """Parse count text that may include comma separators.
+
+    Args:
+        raw: Raw count string.
+
+    Returns:
+        Parsed integer count, or ``None`` when parsing fails.
+    """
     if raw is None:
         return None
     cleaned = raw.replace(",", "").strip()
@@ -47,6 +73,15 @@ def parse_count(raw: str | None) -> int | None:
 
 
 def build_period(year: str | None, month: str | None) -> str | None:
+    """Build a ``YYYY-MM`` period string from year and month fields.
+
+    Args:
+        year: Raw year string.
+        month: Raw month string.
+
+    Returns:
+        Validated period string, or ``None`` when input is invalid.
+    """
     if year is None or month is None:
         return None
     year_clean = year.strip()
@@ -60,6 +95,14 @@ def build_period(year: str | None, month: str | None) -> str | None:
 
 
 def normalize_interest_rate(bronze: BronzeInterestRate) -> SilverInterestRate | None:
+    """Normalize one Bronze interest-rate record.
+
+    Args:
+        bronze: Source Bronze interest-rate record.
+
+    Returns:
+        Normalized Silver interest-rate record, or ``None`` if invalid.
+    """
     rate_date = parse_date(bronze.date)
     if rate_date is None:
         return None
@@ -82,6 +125,14 @@ def normalize_interest_rate(bronze: BronzeInterestRate) -> SilverInterestRate | 
 
 
 def normalize_migration(bronze: BronzeMigration) -> SilverMigration | None:
+    """Normalize one Bronze migration record.
+
+    Args:
+        bronze: Source Bronze migration record.
+
+    Returns:
+        Normalized Silver migration record, or ``None`` if invalid.
+    """
     period = build_period(bronze.year, bronze.month)
     if period is None:
         return None
@@ -113,6 +164,14 @@ def normalize_migration(bronze: BronzeMigration) -> SilverMigration | None:
 
 
 def normalize_interest_rate_batch(records: list[BronzeInterestRate]) -> list[SilverInterestRate]:
+    """Normalize a batch of Bronze interest-rate records.
+
+    Args:
+        records: Bronze interest-rate records to normalize.
+
+    Returns:
+        Successfully normalized Silver interest-rate records.
+    """
     normalized: list[SilverInterestRate] = []
     for record in records:
         silver = normalize_interest_rate(record)
@@ -122,6 +181,14 @@ def normalize_interest_rate_batch(records: list[BronzeInterestRate]) -> list[Sil
 
 
 def normalize_migration_batch(records: list[BronzeMigration]) -> list[SilverMigration]:
+    """Normalize a batch of Bronze migration records.
+
+    Args:
+        records: Bronze migration records to normalize.
+
+    Returns:
+        Successfully normalized Silver migration records.
+    """
     normalized: list[SilverMigration] = []
     for record in records:
         silver = normalize_migration(record)

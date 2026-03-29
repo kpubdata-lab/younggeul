@@ -1,3 +1,7 @@
+# pyright: reportMissingImports=false
+
+"""World initializer node for seeding simulation world and participants."""
+
 from __future__ import annotations
 
 import hashlib
@@ -159,6 +163,19 @@ def make_world_initializer_node(
     event_store: EventStore,
     snapshot_reader: SnapshotReader,
 ) -> Any:
+    """Create the world initializer node for the simulation graph.
+
+    The world initializer node builds initial segment and participant states from
+    snapshot-backed metrics, then emits initialization metadata.
+
+    Args:
+        event_store: Event store used to publish initialization events.
+        snapshot_reader: Snapshot reader used to retrieve baseline data.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         scenario = state.get("scenario")
         if scenario is None:

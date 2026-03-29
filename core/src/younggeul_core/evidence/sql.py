@@ -1,3 +1,5 @@
+"""SQL DDL statements for evidence-related storage tables."""
+
 EVIDENCE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS evidence_records (
     evidence_id TEXT PRIMARY KEY,

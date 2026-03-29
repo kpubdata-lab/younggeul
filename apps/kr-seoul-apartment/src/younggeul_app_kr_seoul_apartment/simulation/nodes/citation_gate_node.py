@@ -1,5 +1,7 @@
 # pyright: reportMissingImports=false
 
+"""Citation gate node that verifies report claims against evidence."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -33,6 +35,19 @@ def _matches_subject(
 
 
 def make_citation_gate_node(evidence_store: EvidenceStore, event_store: EventStore) -> Any:
+    """Create the citation gate node for the simulation graph.
+
+    The citation gate node validates generated claims against evidence records and
+    emits citation gate outcomes.
+
+    Args:
+        evidence_store: Evidence storage used to resolve evidence IDs.
+        event_store: Event store used to publish citation gate events.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         run_meta = state.get("run_meta")
         if run_meta is None:

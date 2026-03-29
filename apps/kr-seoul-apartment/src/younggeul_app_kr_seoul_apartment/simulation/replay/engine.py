@@ -1,3 +1,5 @@
+"""Replay engine for rebuilding simulation state from emitted events."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,6 +15,18 @@ from ..schemas.intake import IntakePlan
 
 @dataclass(frozen=True)
 class ReplayResult:
+    """Replay output containing reconstructed state and summary metadata.
+
+    Attributes:
+        state: Reconstructed simulation graph state.
+        completeness: Replay completeness level.
+        event_count: Number of processed events.
+        warnings: Replay warnings accumulated during processing.
+        world_summary: World summary extracted from initialization event.
+        participant_count: Participant count extracted from initialization event.
+        anchor_period: Anchor period extracted from initialization event.
+    """
+
     state: SimulationGraphState
     completeness: Literal["partial", "full"]
     event_count: int
@@ -24,10 +38,18 @@ class ReplayResult:
 
 @dataclass(frozen=True)
 class ReplayContext:
+    """Replay options controlling strictness and error handling.
+
+    Attributes:
+        strict: Whether unknown event types should raise replay errors.
+    """
+
     strict: bool = True
 
 
 class ReplayError(Exception):
+    """Raised when replay cannot process an event payload."""
+
     pass
 
 
@@ -195,10 +217,24 @@ HANDLERS: dict[str, EventHandler] = {
 
 
 class ReplayEngine:
+    """Engine that replays simulation events into a graph-state snapshot."""
+
     def __init__(self, event_store: EventStore) -> None:
         self._event_store = event_store
 
     def replay(self, run_id: str, *, strict: bool = True) -> ReplayResult:
+        """Replay a simulation run from stored events.
+
+        Args:
+            run_id: Simulation run identifier to replay.
+            strict: Whether unknown event types should raise errors.
+
+        Returns:
+            Replay result with reconstructed state and replay metadata.
+
+        Raises:
+            ReplayError: When replay fails under strict processing.
+        """
         context = ReplayContext(strict=strict)
         events = self._event_store.get_events(run_id)
 

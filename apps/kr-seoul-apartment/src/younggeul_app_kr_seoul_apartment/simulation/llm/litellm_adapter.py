@@ -1,3 +1,5 @@
+"""LiteLLM adapter that validates structured JSON responses."""
+
 from __future__ import annotations
 
 import json
@@ -12,14 +14,20 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class StructuredLLMTransportError(RuntimeError):
+    """Raised when transport-level LLM invocation fails."""
+
     pass
 
 
 class StructuredLLMResponseError(ValueError):
+    """Raised when LLM output is empty, invalid, or schema-incompatible."""
+
     pass
 
 
 class LiteLLMStructuredLLM:
+    """Structured LLM transport backed by the LiteLLM completion API."""
+
     def __init__(self, model: str, **default_kwargs: Any) -> None:
         self.model = model
         self._default_kwargs = default_kwargs
@@ -31,6 +39,20 @@ class LiteLLMStructuredLLM:
         response_model: type[T],
         temperature: float = 0.0,
     ) -> T:
+        """Generate and validate a structured response from LiteLLM.
+
+        Args:
+            messages: Ordered chat messages sent to the model.
+            response_model: Pydantic model used as the response schema.
+            temperature: Sampling temperature for generation.
+
+        Returns:
+            Parsed and validated response model instance.
+
+        Raises:
+            StructuredLLMTransportError: When the model call fails.
+            StructuredLLMResponseError: When output content is invalid.
+        """
         litellm = import_module("litellm")
 
         schema = response_model.model_json_schema()

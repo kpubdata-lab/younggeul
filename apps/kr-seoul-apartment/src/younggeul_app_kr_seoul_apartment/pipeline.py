@@ -1,3 +1,5 @@
+"""End-to-end deterministic Bronze-to-Gold data pipeline for Seoul apartment data."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -45,6 +47,12 @@ def run_pipeline(bronze: BronzeInput) -> PipelineResult:
     """Execute the full Bronze → Silver → Gold data pipeline.
 
     All transforms are deterministic (ADR-004). No LLMs, no side effects.
+
+    Args:
+        bronze: Raw Bronze layer records grouped by domain.
+
+    Returns:
+        Combined Silver and Gold outputs produced from the provided Bronze input.
     """
     # Silver layer
     silver_apt = normalize_apt_batch(bronze.apt_transactions)

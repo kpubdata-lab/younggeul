@@ -1,3 +1,5 @@
+"""Snapshot publishing and resolution helpers for Gold district metrics."""
+
 from __future__ import annotations
 
 import hashlib
@@ -47,6 +49,15 @@ def _load_manifest(manifest_path: Path) -> SnapshotManifest:
 
 
 def publish_snapshot(gold_rows: list[GoldDistrictMonthlyMetrics], base_dir: Path) -> SnapshotRef:
+    """Publish Gold metrics as an immutable dataset snapshot.
+
+    Args:
+        gold_rows: Gold district monthly metric rows to persist.
+        base_dir: Root directory where snapshot folders are stored.
+
+    Returns:
+        Reference metadata for the newly published snapshot.
+    """
     sorted_rows = _sorted_gold_rows(gold_rows)
     jsonl_content = _jsonl_bytes(sorted_rows)
     table_hash = hashlib.sha256(jsonl_content).hexdigest()
@@ -84,6 +95,19 @@ def publish_snapshot(gold_rows: list[GoldDistrictMonthlyMetrics], base_dir: Path
 
 
 def resolve_snapshot(snapshot_id: str, base_dir: Path) -> tuple[SnapshotManifest, list[GoldDistrictMonthlyMetrics]]:
+    """Resolve a snapshot manifest and its Gold rows.
+
+    Args:
+        snapshot_id: Snapshot identifier or ``"latest"``.
+        base_dir: Root directory containing snapshot folders.
+
+    Returns:
+        The validated snapshot manifest and parsed Gold metric rows.
+
+    Raises:
+        FileNotFoundError: If the requested snapshot cannot be found.
+        ValueError: If manifest or table integrity checks fail.
+    """
     if snapshot_id == "latest":
         latest_manifest: SnapshotManifest | None = None
         latest_snapshot_dir: Path | None = None

@@ -1,3 +1,5 @@
+"""Report renderer node that converts claims into final markdown output."""
+
 from __future__ import annotations
 
 # pyright: reportMissingImports=false
@@ -24,6 +26,18 @@ _SECTION_TITLES: dict[str, str] = {
 
 
 def make_report_renderer_node(event_store: EventStore) -> Any:
+    """Create the report renderer node for the simulation graph.
+
+    The report renderer node organizes validated claims into report sections and
+    emits a rendered report event.
+
+    Args:
+        event_store: Event store used to publish report rendering events.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         run_meta = state.get("run_meta")
         if run_meta is None:

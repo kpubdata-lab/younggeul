@@ -1,3 +1,5 @@
+"""Evidence storage abstractions used by simulation reporting."""
+
 from __future__ import annotations
 
 from .store import EvidenceRecord, EvidenceStore, InMemoryEvidenceStore

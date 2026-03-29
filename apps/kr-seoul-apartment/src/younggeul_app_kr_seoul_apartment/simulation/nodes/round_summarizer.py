@@ -1,3 +1,5 @@
+"""Round summarizer node that emits final simulation summary metrics."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -9,6 +11,18 @@ from ..graph_state import SimulationGraphState
 
 
 def make_round_summarizer_node(event_store: EventStore) -> Any:
+    """Create the round summarizer node for the simulation graph.
+
+    The round summarizer node aggregates final world and participant snapshots
+    into a simulation completion event.
+
+    Args:
+        event_store: Event store used to publish completion summaries.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         run_meta = state.get("run_meta")
         if run_meta is None:

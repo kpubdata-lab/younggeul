@@ -1,3 +1,5 @@
+"""Public state schemas for bronze, silver, gold, and simulation layers."""
+
 from .bronze import (
     BronzeAptTransaction,
     BronzeIngestManifest,

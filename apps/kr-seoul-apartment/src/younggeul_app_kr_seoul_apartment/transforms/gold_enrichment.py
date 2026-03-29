@@ -1,3 +1,5 @@
+"""Gold trend enrichment helpers for district monthly metrics."""
+
 from __future__ import annotations
 
 from younggeul_core.state.gold import GoldDistrictMonthlyMetrics
@@ -32,6 +34,12 @@ def enrich_district_monthly_trends(
 
     Requires metrics sorted by (gu_code, period). Returns new list with
     trend fields populated where prior period data exists.
+
+    Args:
+        metrics: District monthly metrics to enrich with trend percentages.
+
+    Returns:
+        New metric rows with MoM and YoY trend fields populated when possible.
     """
     sorted_metrics = sorted(metrics, key=lambda metric: (metric.gu_code, metric.period))
     lookup = {(metric.gu_code, metric.period): metric for metric in sorted_metrics}

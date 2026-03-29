@@ -1,3 +1,5 @@
+"""Intake planner node for extracting structured simulation intent."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -29,6 +31,19 @@ def make_intake_planner_node(
     event_store: EventStore,
     structured_llm: StructuredLLM,
 ) -> Any:
+    """Create the intake planner node for the simulation graph.
+
+    The intake planner node transforms a raw user query into a validated intake
+    plan that downstream nodes can consume.
+
+    Args:
+        event_store: Event store used to publish intake planning events.
+        structured_llm: Structured LLM transport used to produce the intake plan.
+
+    Returns:
+        A LangGraph-compatible node function.
+    """
+
     def node(state: SimulationGraphState) -> dict[str, Any]:
         from datetime import datetime, timezone
         from uuid import uuid4
