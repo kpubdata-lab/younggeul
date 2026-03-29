@@ -4,16 +4,14 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime, timezone
-from importlib import import_module
 from typing import Any
 from uuid import uuid4
+
+from younggeul_core.state.simulation import ReportClaim
 
 from ..events import EventStore, SimulationEvent
 from ..graph_state import SimulationGraphState
 from ..schemas.report import RenderedClaimEntry, RenderedReport, RenderedSection
-
-simulation_state_module = import_module("younggeul_core.state.simulation")
-ReportClaim = simulation_state_module.ReportClaim
 
 _SECTION_ORDER: tuple[str, ...] = ("summary", "direction", "volume", "drivers", "risks")
 _SECTION_TITLES: dict[str, str] = {
