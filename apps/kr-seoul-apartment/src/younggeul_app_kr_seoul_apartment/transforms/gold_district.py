@@ -33,7 +33,7 @@ def _find_interest_rate(rates: list[SilverInterestRate] | None, period: str) -> 
         return None
 
     latest = max(candidates, key=lambda rate: rate.rate_date)
-    return latest.rate_value
+    return Decimal(latest.rate_value)
 
 
 def _find_net_migration(
@@ -49,7 +49,7 @@ def _find_net_migration(
         if migration.period != period:
             continue
         if migration.region_code == city_code:
-            return migration.net_count
+            return int(migration.net_count)
     return None
 
 
