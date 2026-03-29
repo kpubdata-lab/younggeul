@@ -96,9 +96,9 @@ def to_simulation_state(graph_state: SimulationGraphState) -> SimulationState:
         validated = _SIMULATION_STATE_ADAPTER.validate_python(simulation_payload)
     except ValidationError as exc:
         raise ValueError("Simulation graph state cannot be converted to SimulationState") from exc
-    return validated  # type: ignore[return-value]
+    return validated
 
 
 def validate_initialized_state(graph_state: SimulationGraphState) -> bool:
-    state_dict: dict[str, object] = dict(graph_state)  # type: ignore[arg-type]
+    state_dict: dict[str, object] = dict(graph_state)
     return all(key in state_dict and state_dict[key] is not None for key in _REQUIRED_INITIALIZED_KEYS)
