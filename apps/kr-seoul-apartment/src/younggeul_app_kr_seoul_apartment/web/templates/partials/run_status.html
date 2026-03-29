@@ -1,0 +1,33 @@
+<table>
+  <tbody>
+    <tr>
+      <th>Run ID</th>
+      <td><code>{{ run.run_id }}</code></td>
+    </tr>
+    <tr>
+      <th>Query</th>
+      <td>{{ run.query }}</td>
+    </tr>
+    <tr>
+      <th>Status</th>
+      <td><span class="badge {{ badge_class }}">{{ run.status }}</span></td>
+    </tr>
+    <tr>
+      <th>Created</th>
+      <td>{{ run.created_at }}</td>
+    </tr>
+    <tr>
+      <th>Completed</th>
+      <td>{{ run.completed_at or "-" }}</td>
+    </tr>
+  </tbody>
+</table>
+
+{% if run.status == "completed" and report_text %}
+  <div class="panel" style="margin-top: 12px; margin-bottom: 0;">
+    <h3>Report</h3>
+    <pre>{{ report_text }}</pre>
+  </div>
+{% elif run.status == "failed" %}
+  <p class="error" style="margin-top: 12px;">실행 실패: {{ run.error or "unknown error" }}</p>
+{% endif %}

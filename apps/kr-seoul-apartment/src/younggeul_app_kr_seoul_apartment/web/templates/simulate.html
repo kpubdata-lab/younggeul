@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Simulate | 영끌 시뮬레이터{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h1>시뮬레이션 실행</h1>
+    <form hx-post="/ui/simulate" hx-target="#result" hx-swap="innerHTML">
+      <div>
+        <label for="query">Query</label>
+        <textarea id="query" name="query" placeholder="예: 2026년 강남구 매매시장 전망" required></textarea>
+      </div>
+      <div>
+        <label for="max_rounds">Max Rounds</label>
+        <input id="max_rounds" name="max_rounds" type="number" min="1" value="3" required>
+      </div>
+      <div>
+        <label for="model_id">Model ID</label>
+        <input id="model_id" name="model_id" type="text" value="stub" required>
+      </div>
+      <button type="submit">실행 시작</button>
+    </form>
+  </section>
+
+  <section id="result" class="panel">
+    <p class="muted">실행 결과가 여기에 표시됩니다.</p>
+  </section>
+{% endblock %}

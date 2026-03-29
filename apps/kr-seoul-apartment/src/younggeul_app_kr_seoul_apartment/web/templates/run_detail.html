@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Run Detail | 영끌 시뮬레이터{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h1>시뮬레이션 상세</h1>
+    <div
+      id="run-detail-status"
+      {% if is_polling %}
+      hx-get="/ui/partials/runs/{{ run.run_id }}"
+      hx-trigger="load, every 2s"
+      hx-swap="innerHTML"
+      {% endif %}
+    >
+      {% include "partials/run_status.html" %}
+    </div>
+  </section>
+{% endblock %}

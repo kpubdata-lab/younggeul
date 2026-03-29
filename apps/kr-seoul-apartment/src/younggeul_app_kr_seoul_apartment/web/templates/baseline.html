@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Baseline | 영끌 시뮬레이터{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h1>Baseline Forecast</h1>
+    <form method="post" action="/ui/baseline">
+      <div>
+        <label for="snapshot_id">snapshot_id</label>
+        <input id="snapshot_id" name="snapshot_id" type="text" value="{{ snapshot_id }}" placeholder="latest 또는 스냅샷 ID" required>
+      </div>
+      <button type="submit">예측 실행</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>결과</h2>
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <table>
+      <thead>
+        <tr>
+          <th>gu_code</th>
+          <th>gu_name</th>
+          <th>forecast_date</th>
+          <th>forecast_median_price</th>
+          <th>method</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in results %}
+          <tr>
+            <td>{{ item.gu_code }}</td>
+            <td>{{ item.gu_name }}</td>
+            <td>{{ item.target_period }}</td>
+            <td>{{ item.predicted_median_price }}</td>
+            <td>{{ item.model_name }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="5" class="muted">표시할 결과가 없습니다.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

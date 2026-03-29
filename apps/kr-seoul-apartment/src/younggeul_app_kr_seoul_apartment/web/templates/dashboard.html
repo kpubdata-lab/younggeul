@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | 영끌 시뮬레이터{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h1>시뮬레이션 대시보드</h1>
+    <p class="muted">최근 실행 기록을 5초마다 자동으로 갱신합니다.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Run ID</th>
+          <th>Query</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody
+        id="run-list"
+        hx-get="/ui/partials/runs"
+        hx-trigger="every 5s"
+        hx-swap="innerHTML"
+      >
+        {% include "partials/run_list.html" %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}
