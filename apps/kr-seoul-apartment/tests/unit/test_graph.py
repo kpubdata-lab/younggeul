@@ -90,7 +90,7 @@ def test_stubs_emit_events_to_store() -> None:
 
     graph.invoke(_make_seed("run-event-count", max_rounds=max_rounds))
 
-    assert store.count("run-event-count") == 7 + (2 * max_rounds)
+    assert store.count("run-event-count") == 8 + (2 * max_rounds)
 
 
 def test_event_types_emitted() -> None:
@@ -111,6 +111,7 @@ def test_event_types_emitted() -> None:
         "REPORT_WRITTEN",
         "CRITIC",
         "CITATION_GATE",
+        "REPORT_RENDERED",
     }
 
 
@@ -235,6 +236,7 @@ def test_mermaid_smoke() -> None:
     assert "report_writer" in mermaid
     assert "critic" in mermaid
     assert "citation_gate" in mermaid
+    assert "report_renderer" in mermaid
 
 
 def test_default_max_rounds_used_when_not_in_state() -> None:
@@ -275,8 +277,8 @@ def test_multiple_runs_with_same_graph_independent() -> None:
     final_a = graph.invoke(_make_seed("run-a", max_rounds=1))
     final_b = graph.invoke(_make_seed("run-b", max_rounds=3))
 
-    assert store.count("run-a") == 9
-    assert store.count("run-b") == 13
+    assert store.count("run-a") == 10
+    assert store.count("run-b") == 14
     assert final_a["round_no"] == 1
     assert final_b["round_no"] == 3
     assert set(final_a["event_refs"]).isdisjoint(set(final_b["event_refs"]))
