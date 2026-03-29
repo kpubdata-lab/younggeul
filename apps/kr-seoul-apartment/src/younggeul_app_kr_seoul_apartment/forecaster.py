@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
 
 from younggeul_core.state.gold import BaselineForecast, GoldDistrictMonthlyMetrics
 from younggeul_core.state.simulation import SnapshotRef
@@ -40,6 +41,7 @@ def forecast_baseline(metrics: list[GoldDistrictMonthlyMetrics]) -> list[Baselin
         ma3_signal = ((latest.avg_price - ma3) / ma3) * 100.0 if ma3 > 0 else 0.0
 
         score = 0.6 * mom_price + 0.3 * ma3_signal + 0.1 * mom_volume
+        direction: Literal["up", "down", "flat"]
         if score > 1.0:
             direction = "up"
         elif score < -1.0:
