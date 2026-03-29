@@ -16,6 +16,7 @@ from .nodes.continue_gate import should_continue
 from .nodes.evidence_builder import make_evidence_builder_node
 from .nodes.intake_planner import make_intake_planner_node
 from .nodes.participant_decider import make_participant_decider_node
+from .nodes.report_renderer import make_report_renderer_node
 from .nodes.round_resolver import make_round_resolver_node
 from .nodes.round_summarizer import make_round_summarizer_node
 from .nodes.scenario_builder import make_scenario_builder_node
@@ -62,6 +63,7 @@ def build_simulation_graph(
     round_resolver_node = make_round_resolver_node(event_store)
     round_summarizer_node = make_round_summarizer_node(event_store)
     evidence_builder_node = make_evidence_builder_node(_evidence_store)
+    report_renderer_node = make_report_renderer_node(event_store)
 
     graph.add_node("intake_planner", intake_planner_node)
     graph.add_node("scenario_builder", scenario_builder_node)
@@ -73,6 +75,7 @@ def build_simulation_graph(
     graph.add_node("report_writer", _make_report_writer_stub(event_store))
     graph.add_node("critic", _make_passthrough_stub(event_store, "critic"))
     graph.add_node("citation_gate", _make_passthrough_stub(event_store, "citation_gate"))
+    graph.add_node("report_renderer", report_renderer_node)
 
     graph.add_edge(START, "intake_planner")
     graph.add_edge("intake_planner", "scenario_builder")
@@ -98,7 +101,8 @@ def build_simulation_graph(
     graph.add_edge("evidence_builder", "report_writer")
     graph.add_edge("report_writer", "critic")
     graph.add_edge("critic", "citation_gate")
-    graph.add_edge("citation_gate", END)
+    graph.add_edge("citation_gate", "report_renderer")
+    graph.add_edge("report_renderer", END)
 
     return graph.compile()
 
