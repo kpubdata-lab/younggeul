@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import operator
 from datetime import datetime, timezone
-from typing import Annotated, Any, TypedDict, cast
+from typing import Annotated, Any, TypedDict
 
 from pydantic import TypeAdapter, ValidationError
 from typing_extensions import TypedDict as ExtTypedDict
@@ -93,10 +93,12 @@ def to_simulation_state(graph_state: SimulationGraphState) -> SimulationState:
 
     simulation_payload = {key: value for key, value in graph_state.items() if key in _SIMULATION_STATE_KEYS}
     try:
-        return cast(SimulationState, _SIMULATION_STATE_ADAPTER.validate_python(simulation_payload))
+        validated = _SIMULATION_STATE_ADAPTER.validate_python(simulation_payload)
     except ValidationError as exc:
         raise ValueError("Simulation graph state cannot be converted to SimulationState") from exc
+    return validated  # type: ignore[return-value]
 
 
 def validate_initialized_state(graph_state: SimulationGraphState) -> bool:
-    return all(key in graph_state and graph_state[key] is not None for key in _REQUIRED_INITIALIZED_KEYS)
+    state_dict: dict[str, object] = dict(graph_state)  # type: ignore[arg-type]
+    return all(key in state_dict and state_dict[key] is not None for key in _REQUIRED_INITIALIZED_KEYS)
