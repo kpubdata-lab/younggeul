@@ -518,5 +518,17 @@ def eval_command(ctx: click.Context, output_dir: str) -> None:
         sys.exit(1)
 
 
+@main.command("serve", help="Start the web UI server.")
+@click.option("--host", default="0.0.0.0", show_default=True)
+@click.option("--port", default=8000, type=int, show_default=True)
+def serve_command(host: str, port: int) -> None:
+    import uvicorn
+
+    from .web.app import create_app
+
+    app = create_app()
+    uvicorn.run(app, host=host, port=port)
+
+
 if __name__ == "__main__":
     main()

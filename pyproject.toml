@@ -30,9 +30,17 @@ dev = [
   "mypy",
   "pre-commit",
   "pandas-stubs",
+  "fastapi>=0.100",
+  "uvicorn[standard]>=0.20",
+  "jinja2>=3.1",
   "opentelemetry-api>=1.20",
   "opentelemetry-sdk>=1.20",
   "opentelemetry-exporter-otlp-proto-grpc>=1.20",
+]
+web = [
+  "fastapi>=0.100",
+  "uvicorn[standard]>=0.20",
+  "jinja2>=3.1",
 ]
 observability = [
   "opentelemetry-api>=1.20",
