@@ -39,6 +39,7 @@ def _reset_metric_singletons() -> None:
     setattr(metrics_module, "_llm_tokens_total", None)
     setattr(metrics_module, "_llm_cost_usd_total", None)
     setattr(metrics_module, "_citation_gate_failures_total", None)
+    setattr(metrics_module, "_simulation_active_runs", None)
     setattr(metrics_module, "_web_requests_total", None)
     setattr(metrics_module, "_web_request_duration_seconds", None)
 
@@ -454,3 +455,28 @@ def test_init_tracing_uses_resource() -> None:
 
     _, kwargs = tracer_provider_cls.call_args
     assert kwargs["resource"] is resource
+
+
+def test_simulation_active_runs_returns_noop_when_otel_missing() -> None:
+    _reset_metric_singletons()
+    with patch.object(metrics_module, "otel_metrics", None):
+        udc = metrics_module.simulation_active_runs()
+        udc.add(1, attributes=metrics_module.metric_attrs())
+        udc.add(-1, attributes=metrics_module.metric_attrs())
+
+
+def test_simulation_active_runs_creates_up_down_counter() -> None:
+    _reset_metric_singletons()
+    meter = MagicMock()
+    udc_mock = MagicMock()
+    meter.create_up_down_counter.return_value = udc_mock
+
+    with patch.object(metrics_module, "get_meter", return_value=meter):
+        result = metrics_module.simulation_active_runs()
+
+    meter.create_up_down_counter.assert_called_once_with(
+        "simulation_active_runs",
+        description="Number of currently running simulations",
+        unit="{run}",
+    )
+    assert result is udc_mock

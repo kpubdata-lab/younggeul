@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -134,3 +135,58 @@ def test_run_simulation_background_marks_failed_on_exception(monkeypatch: pytest
     assert run_meta.status == "failed"
     assert run_meta.error is not None
     assert "boom" in run_meta.error
+
+
+def test_run_simulation_background_tracks_active_runs(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    store = RunStore(base_dir=tmp_path)
+    run_id = store.create_run("q")
+
+    udc = MagicMock()
+    calls: list[int] = []
+    udc.add.side_effect = lambda amount, **_kw: calls.append(amount)
+
+    class FakeGraph:
+        def invoke(self, initial_state: dict[str, object]) -> dict[str, object]:
+            assert len(calls) == 1 and calls[0] == 1
+            return {
+                "rendered_report": {
+                    "run_id": run_id,
+                    "round_no": 1,
+                    "rendered_at": datetime.now(timezone.utc).isoformat(),
+                    "total_claims": 0,
+                    "passed_claims": 0,
+                    "failed_claims": 0,
+                    "sections": [],
+                    "markdown": "# OK",
+                }
+            }
+
+    monkeypatch.setattr(services, "build_simulation_graph", lambda *_args, **_kwargs: FakeGraph())
+
+    with patch.object(services, "simulation_active_runs", return_value=udc):
+        services.run_simulation_background(store, run_id, "q", 1, "stub")
+
+    assert calls == [1, -1]
+
+
+def test_run_simulation_background_decrements_active_runs_on_failure(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    store = RunStore(base_dir=tmp_path)
+    run_id = store.create_run("q")
+
+    udc = MagicMock()
+    calls: list[int] = []
+    udc.add.side_effect = lambda amount, **_kw: calls.append(amount)
+
+    class FakeGraph:
+        def invoke(self, initial_state: dict[str, object]) -> dict[str, object]:
+            _ = initial_state
+            raise RuntimeError("boom")
+
+    monkeypatch.setattr(services, "build_simulation_graph", lambda *_args, **_kwargs: FakeGraph())
+
+    with patch.object(services, "simulation_active_runs", return_value=udc):
+        services.run_simulation_background(store, run_id, "q", 1, "stub")
+
+    assert calls == [1, -1]
