@@ -22,11 +22,20 @@ class CounterLike(Protocol):
     def add(self, amount: int | float, attributes: dict[str, str] | None = None) -> None: ...
 
 
+class UpDownCounterLike(Protocol):
+    def add(self, amount: int | float, attributes: dict[str, str] | None = None) -> None: ...
+
+
 class HistogramLike(Protocol):
     def record(self, amount: int | float, attributes: dict[str, str] | None = None) -> None: ...
 
 
 class _NoOpCounter:
+    def add(self, amount: int | float, attributes: dict[str, str] | None = None) -> None:
+        del amount, attributes
+
+
+class _NoOpUpDownCounter:
     def add(self, amount: int | float, attributes: dict[str, str] | None = None) -> None:
         del amount, attributes
 
@@ -41,6 +50,10 @@ class _NoOpMeter:
         del name, kwargs
         return _NoOpCounter()
 
+    def create_up_down_counter(self, name: str, **kwargs: Any) -> UpDownCounterLike:
+        del name, kwargs
+        return _NoOpUpDownCounter()
+
     def create_histogram(self, name: str, **kwargs: Any) -> HistogramLike:
         del name, kwargs
         return _NoOpHistogram()
@@ -48,6 +61,8 @@ class _NoOpMeter:
 
 class MeterLike(Protocol):
     def create_counter(self, name: str, **kwargs: Any) -> CounterLike: ...
+
+    def create_up_down_counter(self, name: str, **kwargs: Any) -> UpDownCounterLike: ...
 
     def create_histogram(self, name: str, **kwargs: Any) -> HistogramLike: ...
 
@@ -62,6 +77,7 @@ _llm_request_duration_seconds: HistogramLike | None = None
 _llm_tokens_total: CounterLike | None = None
 _llm_cost_usd_total: CounterLike | None = None
 _citation_gate_failures_total: CounterLike | None = None
+_simulation_active_runs: UpDownCounterLike | None = None
 
 
 def _is_enabled() -> bool:
@@ -257,3 +273,19 @@ def citation_gate_failures_total() -> CounterLike:
     if counter is None:
         return _NoOpCounter()
     return counter
+
+
+def simulation_active_runs() -> UpDownCounterLike:
+    global _simulation_active_runs
+
+    if _simulation_active_runs is None:
+        _simulation_active_runs = get_meter().create_up_down_counter(
+            "simulation_active_runs",
+            description="Number of currently running simulations",
+            unit="{run}",
+        )
+
+    udc = _simulation_active_runs
+    if udc is None:
+        return _NoOpUpDownCounter()
+    return udc

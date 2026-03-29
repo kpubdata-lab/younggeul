@@ -14,6 +14,7 @@ from younggeul_app_kr_seoul_apartment.simulation.evidence.store import InMemoryE
 from younggeul_app_kr_seoul_apartment.simulation.events import EventStore
 from younggeul_app_kr_seoul_apartment.simulation.graph import build_simulation_graph
 from younggeul_app_kr_seoul_apartment.simulation.graph_state import SimulationGraphState, seed_graph_state
+from younggeul_app_kr_seoul_apartment.simulation.metrics import metric_attrs, simulation_active_runs
 from younggeul_app_kr_seoul_apartment.simulation.schemas.report import RenderedReport
 from younggeul_app_kr_seoul_apartment.snapshot import publish_snapshot, resolve_snapshot
 from younggeul_core.state.gold import BaselineForecast, GoldDistrictMonthlyMetrics
@@ -53,7 +54,8 @@ def seed_graph_state_service(user_query: str, run_id: str, run_name: str, model_
 
 
 def run_simulation_background(run_store: RunStore, run_id: str, query: str, max_rounds: int, model_id: str) -> None:
-    """Execute simulation in background thread, updating RunStore on completion/failure."""
+    attrs = metric_attrs()
+    simulation_active_runs().add(1, attributes=attrs)
     try:
         run_store.update_status(run_id, "running")
         event_store = InMemoryEventStore()
@@ -68,6 +70,8 @@ def run_simulation_background(run_store: RunStore, run_id: str, query: str, max_
     except Exception as exc:
         logger.exception("Simulation %s failed", run_id)
         run_store.update_status(run_id, "failed", error=str(exc))
+    finally:
+        simulation_active_runs().add(-1, attributes=attrs)
 
 
 def _extract_report_text(final_state: dict[str, Any], event_store: InMemoryEventStore, run_id: str) -> str:
