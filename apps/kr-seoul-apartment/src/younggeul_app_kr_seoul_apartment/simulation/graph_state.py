@@ -23,6 +23,7 @@ from younggeul_core.state.simulation import (
 class SimulationGraphState(TypedDict, total=False):
     user_query: str
     intake_plan: dict[str, Any]
+    participant_roster: dict[str, Any]
 
     run_meta: RunMeta
     snapshot: SnapshotRef

@@ -20,6 +20,8 @@ from .events import EventStore, SimulationEvent
 from .graph_state import SimulationGraphState
 from .llm.ports import StructuredLLM
 from .nodes.intake_planner import make_intake_planner_node
+from .nodes.scenario_builder import make_scenario_builder_node
+from .ports.snapshot_reader import SnapshotReader
 
 DEFAULT_MAX_ROUNDS = 3
 
@@ -29,6 +31,7 @@ def build_simulation_graph(
     *,
     default_max_rounds: int = DEFAULT_MAX_ROUNDS,
     structured_llm: StructuredLLM | None = None,
+    snapshot_reader: SnapshotReader | None = None,
 ) -> CompiledStateGraph[Any, Any, Any, Any]:
     graph = StateGraph(SimulationGraphState)
 
@@ -37,9 +40,14 @@ def build_simulation_graph(
         if structured_llm is not None
         else _make_intake_planner_stub(event_store)
     )
+    scenario_builder_node = (
+        make_scenario_builder_node(event_store, structured_llm, snapshot_reader)
+        if structured_llm is not None and snapshot_reader is not None
+        else _make_scenario_builder_stub(event_store)
+    )
 
     graph.add_node("intake_planner", intake_planner_node)
-    graph.add_node("scenario_builder", _make_scenario_builder_stub(event_store))
+    graph.add_node("scenario_builder", scenario_builder_node)
     graph.add_node("world_initializer", _make_world_initializer_stub(event_store, default_max_rounds))
     graph.add_node("round_runner", _make_round_runner_stub(event_store))
     graph.add_node("report_writer", _make_report_writer_stub(event_store))
