@@ -459,6 +459,8 @@ def simulate_command(
         }
         text_lines = [rendered_report.markdown, "", f"Saved report: {report_file}"]
         _output(ctx, data, text_lines)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
     except click.ClickException:
         raise
     except Exception as exc:

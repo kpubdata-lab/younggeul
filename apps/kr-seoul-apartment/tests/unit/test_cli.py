@@ -184,6 +184,7 @@ def test_simulate_rejects_invalid_model_id(runner: CliRunner, tmp_path: Path) ->
 
     assert result.exit_code != 0
     assert "model_id 'not-allowed' is not allowed" in result.output
+    assert "Fatal error:" not in result.output
 
 
 def test_eval_invokes_subprocess_and_returns_success(

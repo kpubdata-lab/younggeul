@@ -5,10 +5,9 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, model_validator
 
-from ..config import get_allowed_models, validate_max_rounds, validate_model_id
-from ..run_store import RunMeta
+from ..config import get_allowed_models, get_max_inflight_runs, validate_max_rounds, validate_model_id
+from ..run_store import RunCapacityExceededError, RunMeta
 from ..services import run_simulation_background
-from ..submission_control import has_submission_capacity
 
 router = APIRouter(prefix="/simulate", tags=["simulate"])
 
@@ -33,14 +32,8 @@ async def create_simulation_run(request: Request, payload: SimulateRequest) -> d
     run_store = request.app.state.run_store
     executor = request.app.state.executor
 
-    if not has_submission_capacity(run_store):
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Simulation queue is full; try again later",
-        )
-
-    run_id = run_store.create_run(payload.query)
     try:
+        run_id = run_store.create_run(payload.query, max_inflight_runs=get_max_inflight_runs())
         executor.submit(
             run_simulation_background,
             run_store,
@@ -49,8 +42,11 @@ async def create_simulation_run(request: Request, payload: SimulateRequest) -> d
             payload.max_rounds,
             payload.model_id,
         )
+    except RunCapacityExceededError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     except Exception as exc:
-        run_store.update_status(run_id, "failed", error=str(exc))
+        if "run_id" in locals():
+            run_store.update_status(run_id, "failed", error=str(exc))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
     return {"run_id": run_id, "status": "pending"}
 

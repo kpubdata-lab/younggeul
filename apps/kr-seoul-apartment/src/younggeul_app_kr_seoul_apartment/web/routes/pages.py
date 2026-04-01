@@ -9,10 +9,9 @@ from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from ..config import validate_max_rounds, validate_model_id
-from ..run_store import RunMeta, RunStore
+from ..config import get_max_inflight_runs, validate_max_rounds, validate_model_id
+from ..run_store import RunCapacityExceededError, RunMeta, RunStore
 from ..services import forecast_baseline_service, resolve_snapshot_service, run_simulation_background
-from ..submission_control import has_submission_capacity
 
 router = APIRouter(prefix="/ui", tags=["pages"])
 
@@ -74,7 +73,7 @@ class RunStoreLike(Protocol):
 
     def list_runs(self) -> list[RunMeta]: ...
 
-    def create_run(self, query: str) -> str: ...
+    def create_run(self, query: str, *, max_inflight_runs: int | None = None) -> str: ...
 
     def update_status(
         self,
@@ -131,14 +130,8 @@ async def simulate_start(request: Request) -> HTMLResponse:
     run_store = cast(RunStoreLike, _state(request).run_store)
     executor = _state(request).executor
 
-    if not has_submission_capacity(run_store):
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Simulation queue is full; try again later",
-        )
-
-    run_id = run_store.create_run(query)
     try:
+        run_id = run_store.create_run(query, max_inflight_runs=get_max_inflight_runs())
         _ = executor.submit(
             run_simulation_background,
             cast(RunStore, run_store),
@@ -147,8 +140,11 @@ async def simulate_start(request: Request) -> HTMLResponse:
             max_rounds,
             model_id,
         )
+    except RunCapacityExceededError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     except Exception as exc:
-        run_store.update_status(run_id, "failed", error=str(exc))
+        if "run_id" in locals():
+            run_store.update_status(run_id, "failed", error=str(exc))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
     context = {
