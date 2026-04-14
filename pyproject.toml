@@ -57,6 +57,9 @@ docs = [
   "mkdocstrings[python]>=0.25",
 ]
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = [
   "core/src/younggeul_core",
