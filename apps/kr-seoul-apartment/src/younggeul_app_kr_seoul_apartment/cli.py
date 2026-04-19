@@ -236,7 +236,13 @@ def main(ctx: click.Context, output: str) -> None:
     "--month",
     "deal_ym",
     default=None,
-    help="Target month in YYYYMM format (required when --source=live, e.g. 202503).",
+    help="Single target month in YYYYMM format (live mode, e.g. 202503). Mutually exclusive with --months.",
+)
+@click.option(
+    "--months",
+    "deal_yms_csv",
+    default=None,
+    help="Comma-separated list of YYYYMM months (live mode, e.g. 202403,202503). Enables YoY/MoM in Gold output. Mutually exclusive with --month.",
 )
 @click.pass_context
 def ingest_command(
@@ -245,22 +251,34 @@ def ingest_command(
     source: str,
     lawd_code: str | None,
     deal_ym: str | None,
+    deal_yms_csv: str | None,
 ) -> None:
     """Ingest Bronze data and write Gold JSONL output.
 
     Default ``--source=fixture`` uses bundled toy data and requires no API keys.
-    ``--source=live`` requires ``--gu`` and ``--month`` plus the
-    ``KPUBDATA_DATAGO_API_KEY`` and ``KPUBDATA_BOK_API_KEY`` environment variables.
+    ``--source=live`` requires ``--gu`` and exactly one of ``--month`` or
+    ``--months`` plus the ``KPUBDATA_DATAGO_API_KEY`` and
+    ``KPUBDATA_BOK_API_KEY`` environment variables.
     """
     try:
         if source == "live":
-            if not lawd_code or not deal_ym:
-                raise click.ClickException("--gu and --month are required when --source=live")
+            if not lawd_code:
+                raise click.ClickException("--gu is required when --source=live")
+            if deal_ym and deal_yms_csv:
+                raise click.ClickException("--month and --months are mutually exclusive")
+            if not deal_ym and not deal_yms_csv:
+                raise click.ClickException("exactly one of --month or --months is required when --source=live")
             from younggeul_app_kr_seoul_apartment.connectors.client_factory import build_client
-            from younggeul_app_kr_seoul_apartment.pipeline_live import run_live_ingest
+            from younggeul_app_kr_seoul_apartment.pipeline_live import run_live_ingest_months
+
+            if deal_yms_csv:
+                deal_yms = [ym.strip() for ym in deal_yms_csv.split(",") if ym.strip()]
+            else:
+                assert deal_ym is not None
+                deal_yms = [deal_ym]
 
             client = build_client()
-            bronze = run_live_ingest(client=client, lawd_code=lawd_code, deal_ym=deal_ym)
+            bronze = run_live_ingest_months(client=client, lawd_code=lawd_code, deal_yms=deal_yms)
         else:
             bronze = _fixture_bronze_input()
         result = run_pipeline(bronze)

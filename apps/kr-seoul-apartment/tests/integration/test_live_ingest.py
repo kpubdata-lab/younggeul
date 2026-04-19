@@ -18,10 +18,14 @@ from younggeul_app_kr_seoul_apartment.connectors.client_factory import (
     build_client,
 )
 from younggeul_app_kr_seoul_apartment.pipeline import run_pipeline
-from younggeul_app_kr_seoul_apartment.pipeline_live import run_live_ingest
+from younggeul_app_kr_seoul_apartment.pipeline_live import (
+    run_live_ingest,
+    run_live_ingest_months,
+)
 
 GANGNAM_LAWD_CODE = "11680"
 TARGET_DEAL_YM = "202503"
+PRIOR_DEAL_YM = "202403"
 
 
 def _env_keys_present() -> bool:
@@ -61,3 +65,26 @@ def test_live_ingest_gangnam_202503_produces_gold_output() -> None:
     assert gold.gu_code.startswith(GANGNAM_LAWD_CODE[:2])
     assert gold.period == f"{TARGET_DEAL_YM[:4]}-{TARGET_DEAL_YM[4:]}"
     assert gold.median_price > 0
+
+
+def test_live_ingest_months_yoy_change_is_populated() -> None:
+    client = build_client()
+
+    bronze = run_live_ingest_months(
+        client=client,
+        lawd_code=GANGNAM_LAWD_CODE,
+        deal_yms=[PRIOR_DEAL_YM, TARGET_DEAL_YM],
+    )
+
+    assert len(bronze.apt_transactions) > 0
+    assert len(bronze.interest_rates) >= 2
+
+    result = run_pipeline(bronze)
+
+    by_period = {gold.period: gold for gold in result.gold}
+    target_period = f"{TARGET_DEAL_YM[:4]}-{TARGET_DEAL_YM[4:]}"
+    prior_period = f"{PRIOR_DEAL_YM[:4]}-{PRIOR_DEAL_YM[4:]}"
+    assert target_period in by_period
+    assert prior_period in by_period
+    assert by_period[target_period].yoy_price_change is not None
+    assert by_period[target_period].yoy_volume_change is not None

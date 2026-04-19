@@ -1,4 +1,4 @@
-"""Live ingest pipeline: fetches one Seoul gu × one month from real APIs via kpubdata.
+"""Live ingest pipeline: fetches Seoul gu × month(s) from real APIs via kpubdata.
 
 v0.1 scope (option C — see docs/adr/007):
 - MOLIT apartment trades and BOK base rate are fetched live.
@@ -55,25 +55,56 @@ def run_live_ingest(
 ) -> BronzeInput:
     """Fetch MOLIT and BOK data for one gu × one month and return a BronzeInput.
 
-    KOSTAT migrations are omitted in live mode (see module docstring); the
-    returned ``BronzeInput.migrations`` list is always empty.
+    Thin wrapper over :func:`run_live_ingest_months` for the single-month case.
+    See that function for full semantics.
+    """
+    return run_live_ingest_months(
+        client=client,
+        lawd_code=lawd_code,
+        deal_yms=[deal_ym],
+        rate_limit_interval=rate_limit_interval,
+    )
+
+
+def run_live_ingest_months(
+    *,
+    client: Client,
+    lawd_code: str,
+    deal_yms: list[str],
+    rate_limit_interval: float = _DEFAULT_RATE_LIMIT_INTERVAL,
+) -> BronzeInput:
+    """Fetch MOLIT and BOK data for one gu × N months and return a BronzeInput.
+
+    MOLIT is queried once per month (the API does not accept a range); BOK is
+    queried with ``start_date=min(deal_yms)`` and ``end_date=max(deal_yms)``
+    so a single request covers the whole window. KOSTAT migrations are omitted
+    in live mode (see module docstring).
 
     Args:
         client: Authenticated kpubdata client (built via ``client_factory.build_client``).
         lawd_code: 5-digit MOLIT sigungu code (e.g. ``"11680"`` for Gangnam-gu).
-        deal_ym: Target month in ``YYYYMM`` format (e.g. ``"202503"``).
+        deal_yms: One or more target months in ``YYYYMM`` format. Order is
+            preserved in the output. Duplicates are rejected.
         rate_limit_interval: Minimum seconds between consecutive API calls per
             connector. Defaults to 1.0 to stay well within data.go.kr quotas.
 
     Returns:
-        ``BronzeInput`` populated with apt transactions and interest rates,
-        ready for ``run_pipeline``.
+        ``BronzeInput`` populated with apt transactions across all requested
+        months and interest rates spanning the full window, ready for
+        ``run_pipeline``. With multiple months, downstream Gold output will
+        include YoY/MoM change ratios where comparison anchors are available.
 
     Raises:
-        ValueError: If ``lawd_code`` or ``deal_ym`` are malformed.
+        ValueError: If ``lawd_code`` or any ``deal_ym`` is malformed, if
+            ``deal_yms`` is empty, or if it contains duplicates.
     """
     _validate_lawd_code(lawd_code)
-    _validate_deal_ym(deal_ym)
+    if not deal_yms:
+        raise ValueError("deal_yms must not be empty")
+    if len(set(deal_yms)) != len(deal_yms):
+        raise ValueError(f"deal_yms must not contain duplicates, got {deal_yms!r}")
+    for ym in deal_yms:
+        _validate_deal_ym(ym)
 
     limiter = RateLimiter(min_interval=rate_limit_interval)
 
@@ -83,24 +114,28 @@ def run_live_ingest(
     apt_connector = MolitAptConnector(client=apt_dataset, rate_limiter=limiter)
     bok_connector = BokInterestRateConnector(client=rate_dataset, rate_limiter=limiter)
 
-    apt_result = apt_connector.fetch(MolitAptRequest(sigungu_code=lawd_code, year_month=deal_ym))
+    apt_records = []
+    for ym in deal_yms:
+        apt_result = apt_connector.fetch(MolitAptRequest(sigungu_code=lawd_code, year_month=ym))
+        apt_records.extend(apt_result.records)
+
     rate_result = bok_connector.fetch(
         BokInterestRateRequest(
             stat_code=_BOK_BASE_RATE_STAT_CODE,
             item_code1=_BOK_BASE_RATE_ITEM_CODE,
             frequency=_BOK_BASE_RATE_FREQUENCY,
-            start_date=deal_ym,
-            end_date=deal_ym,
+            start_date=min(deal_yms),
+            end_date=max(deal_yms),
             rate_type=_BOK_BASE_RATE_TYPE,
             source_id=_BOK_BASE_RATE_SOURCE_ID,
         )
     )
 
     return BronzeInput(
-        apt_transactions=apt_result.records,
+        apt_transactions=apt_records,
         interest_rates=rate_result.records,
         migrations=[],
     )
 
 
-__all__ = ["run_live_ingest"]
+__all__ = ["run_live_ingest", "run_live_ingest_months"]
