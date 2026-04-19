@@ -68,13 +68,7 @@ def test_run_live_ingest_returns_bronze_input_with_records(
     assert isinstance(bronze, BronzeInput)
     assert bronze.apt_transactions == apt_records
     assert bronze.interest_rates == rate_records
-    assert len(bronze.migrations) == 1
-    migration = bronze.migrations[0]
-    assert migration.region_code == "11"
-    assert migration.region_name == "서울특별시"
-    assert migration.year == "2025"
-    assert migration.month == "03"
-    assert migration.source_id == "kostat_population_migration_fixture"
+    assert bronze.migrations == []
 
 
 def test_run_live_ingest_passes_correct_request_params(

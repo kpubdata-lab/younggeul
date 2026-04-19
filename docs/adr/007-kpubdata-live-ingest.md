@@ -25,7 +25,7 @@ The live ingest path will use **kpubdata as the single client library** for all 
 2. **Single client factory**: `younggeul_app_kr_seoul_apartment.connectors.client_factory.build_client()` is the only place that constructs a `kpubdata.Client`. It validates that `KPUBDATA_DATAGO_API_KEY`, `KPUBDATA_BOK_API_KEY`, and `KPUBDATA_KOSIS_API_KEY` are all present and raises a single actionable error message otherwise.
 3. **Live ingest entry point**: `pipeline_live.run_live_ingest(client, lawd_code, deal_ym)` fetches one Seoul `gu × month` slice and returns a `BronzeInput` ready for `run_pipeline`.
 4. **CLI surface**: `younggeul ingest --source live --gu <5-digit LAWD> --month <YYYYMM>`. The default `--source=fixture` path is unchanged so `make demo` keeps working without API keys.
-5. **KOSTAT scope (option C)**: For v0.1, KOSTAT migration is emitted as a single contextual placeholder row in live mode. The kpubdata `kosis.population_migration` dataset only exposes `T70` (이동자수) and `T80` (순이동자수), while our `BronzeMigration` schema requires per-region in/out/net counts. Wiring real KOSTAT migration requires either a different KOSIS table or a Bronze schema change, which is tracked separately.
+5. **KOSTAT scope (option C)**: For v0.1, KOSTAT migration is **not emitted** in live mode (`BronzeInput.migrations` is an empty list). The kpubdata `kosis.population_migration` dataset only exposes `T70` (이동자수) and `T80` (순이동자수), while our `BronzeMigration` schema requires per-region in/out/net counts. Wiring real KOSTAT migration requires either a different KOSIS table or a Bronze schema change, which is tracked separately. The Silver normalizer drops migration rows with all-null counts anyway, so emitting a placeholder Bronze row would be dead code.
 6. **Live integration test**: One gated test (`apps/kr-seoul-apartment/tests/integration/test_live_ingest.py`) exercises the full live path under the `live` pytest marker. It is excluded from `make test` and `make test-all`, and skipped when env vars are absent.
 
 ## Alternatives Considered
@@ -44,7 +44,7 @@ The live ingest path will use **kpubdata as the single client library** for all 
 ## Rationale
 Option C concentrates provider-coupling complexity in one place — the kpubdata library — and lets the younggeul connectors stay thin adapters that translate kpubdata responses into our typed Bronze schemas. When MOLIT changed its envelope format, the fix was a one-line patch in kpubdata + a version bump here, not a sweep across every connector.
 
-The KOSTAT placeholder decision (option C in §6) is a deliberate v0.1 trade-off: we keep the pipeline shape stable and the demo flow honest about its limitations, rather than fabricating in/out/net values we cannot derive from the available KOSIS metric set.
+The KOSTAT decision (option C in §5) is a deliberate v0.1 trade-off: we keep `BronzeInput` shape stable but emit zero migration rows, rather than fabricating in/out/net values we cannot derive from the available KOSIS metric set or shipping a Bronze placeholder that the Silver normalizer would drop anyway.
 
 ## Examples
 ### 1) Building a client and running a live ingest
@@ -88,7 +88,7 @@ export KPUBDATA_KOSIS_API_KEY=...    # 통계청 KOSIS
 
 ### Negative
 - **Upstream coupling**: Bug fixes for provider-side changes block on a kpubdata release.
-- **KOSTAT gap**: Live migration data is a placeholder row in v0.1. Downstream consumers must treat `migrations` as low-confidence in live mode until a follow-up ADR resolves the KOSIS metric mapping.
+- **KOSTAT gap**: Live migration data is unavailable in v0.1 (`BronzeInput.migrations == []`). Downstream consumers see `null` for `net_migration` in Gold output until a follow-up ADR resolves the KOSIS metric mapping.
 
 ### Neutral
 - **Connector tests stay synthetic**: Per ADR-006, unit tests still mock the kpubdata dataset interface; only the gated live test hits real endpoints.

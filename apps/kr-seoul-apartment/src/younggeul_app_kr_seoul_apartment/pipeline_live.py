@@ -2,21 +2,18 @@
 
 v0.1 scope (option C — see docs/adr/007):
 - MOLIT apartment trades and BOK base rate are fetched live.
-- KOSTAT population migration uses a contextual fixture row, because the kpubdata
-  ``kosis.population_migration`` dataset only exposes ``T70``/``T80`` metrics
-  while ``BronzeMigration`` requires per-region in/out/net counts. Wiring those
-  requires either a different KOSIS table or a Bronze schema change, which is
-  tracked separately.
+- KOSTAT population migration is **not emitted** in live mode. The kpubdata
+  ``kosis.population_migration`` dataset only exposes ``T70``/``T80`` aggregate
+  metrics while ``BronzeMigration`` requires per-region in/out/net counts;
+  wiring those requires either a different KOSIS table or a Bronze schema
+  change, which is tracked separately.
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from kpubdata import Client
 
 from younggeul_core.connectors.rate_limit import RateLimiter
-from younggeul_core.state.bronze import BronzeMigration
 
 from younggeul_app_kr_seoul_apartment.connectors.bok import (
     BokInterestRateConnector,
@@ -36,20 +33,6 @@ _BOK_BASE_RATE_TYPE = "base_rate"
 
 _DEFAULT_RATE_LIMIT_INTERVAL = 1.0
 
-_MIGRATION_FIXTURE_HASH = "0" * 64
-_MIGRATION_FIXTURE_SOURCE_ID = "kostat_population_migration_fixture"
-_SIDO_NAMES: dict[str, str] = {
-    "11": "서울특별시",
-    "26": "부산광역시",
-    "27": "대구광역시",
-    "28": "인천광역시",
-    "29": "광주광역시",
-    "30": "대전광역시",
-    "31": "울산광역시",
-    "36": "세종특별자치시",
-    "41": "경기도",
-}
-
 
 def _validate_lawd_code(lawd_code: str) -> None:
     if len(lawd_code) != 5 or not lawd_code.isdigit():
@@ -63,33 +46,6 @@ def _validate_deal_ym(deal_ym: str) -> None:
         raise ValueError(msg)
 
 
-def _sido_from_lawd(lawd_code: str) -> str:
-    return lawd_code[:2]
-
-
-def _build_migration_fixture(
-    *,
-    lawd_code: str,
-    deal_ym: str,
-    now: datetime,
-) -> list[BronzeMigration]:
-    sido_code = _sido_from_lawd(lawd_code)
-    return [
-        BronzeMigration(
-            ingest_timestamp=now,
-            source_id=_MIGRATION_FIXTURE_SOURCE_ID,
-            raw_response_hash=_MIGRATION_FIXTURE_HASH,
-            year=deal_ym[:4],
-            month=deal_ym[4:6],
-            region_code=sido_code,
-            region_name=_SIDO_NAMES.get(sido_code, sido_code),
-            in_count=None,
-            out_count=None,
-            net_count=None,
-        )
-    ]
-
-
 def run_live_ingest(
     *,
     client: Client,
@@ -99,8 +55,8 @@ def run_live_ingest(
 ) -> BronzeInput:
     """Fetch MOLIT and BOK data for one gu × one month and return a BronzeInput.
 
-    KOSTAT migrations are emitted as a single contextual fixture row (see module
-    docstring).
+    KOSTAT migrations are omitted in live mode (see module docstring); the
+    returned ``BronzeInput.migrations`` list is always empty.
 
     Args:
         client: Authenticated kpubdata client (built via ``client_factory.build_client``).
@@ -110,8 +66,8 @@ def run_live_ingest(
             connector. Defaults to 1.0 to stay well within data.go.kr quotas.
 
     Returns:
-        ``BronzeInput`` populated with apt transactions, interest rates and a
-        single placeholder migration row, ready for ``run_pipeline``.
+        ``BronzeInput`` populated with apt transactions and interest rates,
+        ready for ``run_pipeline``.
 
     Raises:
         ValueError: If ``lawd_code`` or ``deal_ym`` are malformed.
@@ -140,16 +96,10 @@ def run_live_ingest(
         )
     )
 
-    migrations = _build_migration_fixture(
-        lawd_code=lawd_code,
-        deal_ym=deal_ym,
-        now=datetime.now(tz=timezone.utc),
-    )
-
     return BronzeInput(
         apt_transactions=apt_result.records,
         interest_rates=rate_result.records,
-        migrations=migrations,
+        migrations=[],
     )
 
 

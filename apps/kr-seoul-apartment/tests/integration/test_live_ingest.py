@@ -52,7 +52,7 @@ def test_live_ingest_gangnam_202503_produces_gold_output() -> None:
 
     assert len(bronze.apt_transactions) > 0
     assert len(bronze.interest_rates) == 1
-    assert len(bronze.migrations) == 1
+    assert bronze.migrations == []
 
     result = run_pipeline(bronze)
 
