@@ -107,6 +107,13 @@ younggeul ingest --source live --gus 11680,11440 --months 202403,202503 --output
 
 `--month`/`--months` and `--gu`/`--gus` are each mutually exclusive. See [ADR-007](docs/adr/007-kpubdata-live-ingest.md) for the design and current scope (KOSTAT migration is not emitted in live mode for v0.1).
 
+To chain ingest → snapshot publish → baseline against real APIs in one shot:
+
+```bash
+set -a; source .env; set +a   # load KPUBDATA_* keys
+make demo-live                # or: GU=11680 MONTHS=202403,202503 bash scripts/demo_live.sh
+```
+
 ## v0.1 Scope
 
 - **Region**: Seoul apartments only (서울 아파트 매매)
