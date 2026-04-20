@@ -35,6 +35,9 @@ clean: ## Remove build artifacts
 demo: ## Run end-to-end demo
 	bash scripts/demo.sh
 
+demo-live: ## Run live ingest -> snapshot -> baseline (requires KPUBDATA_* keys)
+	bash scripts/demo_live.sh
+
 docs: ## Build documentation
 	mkdocs build
 
