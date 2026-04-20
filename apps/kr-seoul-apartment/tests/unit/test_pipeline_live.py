@@ -7,7 +7,10 @@ import pytest
 from kpubdata.core.dataset import Dataset
 
 from younggeul_app_kr_seoul_apartment.pipeline import BronzeInput
-from younggeul_app_kr_seoul_apartment.pipeline_live import run_live_ingest
+from younggeul_app_kr_seoul_apartment.pipeline_live import (
+    run_live_ingest,
+    run_live_ingest_months,
+)
 from younggeul_core.connectors.protocol import ConnectorResult
 from younggeul_core.state.bronze import (
     BronzeAptTransaction,
@@ -134,3 +137,57 @@ def test_run_live_ingest_rejects_invalid_lawd_code(bad_code: str) -> None:
 def test_run_live_ingest_rejects_invalid_deal_ym(bad_month: str) -> None:
     with pytest.raises(ValueError, match="deal_ym must be YYYYMM"):
         run_live_ingest(client=MagicMock(), lawd_code="11680", deal_ym=bad_month)
+
+
+def test_run_live_ingest_months_fetches_apt_per_month_and_bok_range(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from younggeul_app_kr_seoul_apartment import pipeline_live
+    from younggeul_app_kr_seoul_apartment.connectors.bok import BokInterestRateRequest
+    from younggeul_app_kr_seoul_apartment.connectors.molit import MolitAptRequest
+
+    apt_mock = MagicMock()
+    rate_mock = MagicMock()
+    apt_mock.return_value.fetch.return_value = ConnectorResult(records=[_apt_record()], manifest=MagicMock())
+    rate_mock.return_value.fetch.return_value = ConnectorResult(records=[_rate_record()], manifest=MagicMock())
+    monkeypatch.setattr(pipeline_live, "MolitAptConnector", apt_mock)
+    monkeypatch.setattr(pipeline_live, "BokInterestRateConnector", rate_mock)
+
+    client = MagicMock()
+    client.dataset.side_effect = lambda _id: MagicMock(spec=Dataset)
+
+    bronze = run_live_ingest_months(client=client, lawd_code="11680", deal_yms=["202503", "202403"])
+
+    apt_calls = apt_mock.return_value.fetch.call_args_list
+    assert len(apt_calls) == 2
+    apt_year_months = [call.args[0].year_month for call in apt_calls]
+    assert apt_year_months == ["202503", "202403"]
+    for call in apt_calls:
+        assert isinstance(call.args[0], MolitAptRequest)
+        assert call.args[0].sigungu_code == "11680"
+
+    rate_calls = rate_mock.return_value.fetch.call_args_list
+    assert len(rate_calls) == 1
+    rate_request = rate_calls[0].args[0]
+    assert isinstance(rate_request, BokInterestRateRequest)
+    assert rate_request.start_date == "202403"
+    assert rate_request.end_date == "202503"
+
+    assert isinstance(bronze, BronzeInput)
+    assert len(bronze.apt_transactions) == 2
+    assert bronze.migrations == []
+
+
+def test_run_live_ingest_months_rejects_empty_list() -> None:
+    with pytest.raises(ValueError, match="deal_yms must not be empty"):
+        run_live_ingest_months(client=MagicMock(), lawd_code="11680", deal_yms=[])
+
+
+def test_run_live_ingest_months_rejects_duplicates() -> None:
+    with pytest.raises(ValueError, match="must not contain duplicates"):
+        run_live_ingest_months(client=MagicMock(), lawd_code="11680", deal_yms=["202503", "202503"])
+
+
+def test_run_live_ingest_months_rejects_invalid_member() -> None:
+    with pytest.raises(ValueError, match="deal_ym must be YYYYMM"):
+        run_live_ingest_months(client=MagicMock(), lawd_code="11680", deal_yms=["202503", "20250"])

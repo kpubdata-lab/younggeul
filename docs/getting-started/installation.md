@@ -59,7 +59,13 @@ export KPUBDATA_KOSIS_API_KEY="your-kosis-key"
 younggeul ingest --source live --gu 11680 --month 202503 --output-dir ./output/live
 ```
 
-`--gu` is a 5-digit MOLIT sigungu code (e.g. `11680` = 강남구) and `--month` is `YYYYMM`. v0.1 covers one gu × one month per invocation. See [ADR-007](../adr/007-kpubdata-live-ingest.md) for the design and current scope.
+`--gu` is a 5-digit MOLIT sigungu code (e.g. `11680` = 강남구) and `--month` is `YYYYMM`. To populate YoY/MoM change ratios in the Gold output, fetch multiple months in one invocation via `--months` (mutually exclusive with `--month`):
+
+```bash
+younggeul ingest --source live --gu 11680 --months 202403,202503 --output-dir ./output/live-yoy
+```
+
+v0.1 covers one gu per invocation. See [ADR-007](../adr/007-kpubdata-live-ingest.md) for the design and current scope.
 
 !!! note
     All tutorial examples use fixture data; no API key is required.
