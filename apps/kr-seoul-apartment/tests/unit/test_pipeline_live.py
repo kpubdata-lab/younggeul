@@ -259,7 +259,6 @@ def test_run_live_ingest_gus_months_rejects_invalid_lawd_code() -> None:
         run_live_ingest_gus_months(client=MagicMock(), lawd_codes=["11680", "1168"], deal_yms=["202503"])
 
 
-
 def test_run_live_ingest_emits_kostat_migrations_per_month(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -292,9 +291,7 @@ def test_run_live_ingest_emits_kostat_migrations_per_month(
     client = MagicMock()
     client.dataset.side_effect = lambda _id: MagicMock(spec=Dataset)
 
-    bronze = run_live_ingest_months(
-        client=client, lawd_code="11680", deal_yms=["202403", "202503"]
-    )
+    bronze = run_live_ingest_months(client=client, lawd_code="11680", deal_yms=["202403", "202503"])
 
     kostat_calls = kostat_mock.return_value.fetch.call_args_list
     assert len(kostat_calls) == 2
