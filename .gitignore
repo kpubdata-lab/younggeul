@@ -27,6 +27,11 @@ site/
 # Environment
 .env
 .env.local
+.envrc
+
+# Local tooling artifacts (agent orchestration, MCP servers)
+.sisyphus/
+.playwright-mcp/
 
 # OS
 .DS_Store
