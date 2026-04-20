@@ -79,4 +79,4 @@ GitHub Models' free API usage is rate limited by request volume, daily quotas, t
 
 - `apps/kr-seoul-apartment/src/younggeul_app_kr_seoul_apartment/simulation/llm/litellm_adapter.py` — provider routing and token bridge.
 - `.github/workflows/simulation.yml` — workflow token wiring and `younggeul simulate` invocation.
-- [README](../../README.md) — top-level setup note.
+- Repository `README.md` — top-level setup note (lives outside the docs site root).
