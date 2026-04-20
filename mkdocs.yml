@@ -93,6 +93,9 @@ nav:
     - ADR-005 Evidence-Gated Reporting: adr/005-evidence-gated-reporting.md
     - ADR-006 Public Data Policy: adr/006-public-data-policy.md
     - ADR-007 kpubdata Live Ingest: adr/007-kpubdata-live-ingest.md
+    - ADR-008 KOSTAT Live Activation: adr/008-kostat-live-activation.md
+    - ADR-009 GitHub Models LLM: adr/009-github-models-llm.md
+    - ADR-010 Data Pipeline Live Workflow: adr/010-data-pipeline-live-workflow.md
   - API Reference:
     - Overview: api/index.md
     - Core:
