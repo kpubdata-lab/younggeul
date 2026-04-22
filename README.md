@@ -191,6 +191,23 @@ Key architectural decisions are documented as ADRs:
 | [ADR-011](docs/adr/011-simulate-live-snapshot-wiring.md) | Wire live snapshot data into the simulate CLI |
 | [ADR-012](docs/adr/012-abdp-backed-core.md) | Adopt abdp-backed compatibility architecture for `younggeul_core` |
 
+## abdp backend (experimental)
+
+`younggeul_core` is being refactored as a thin compatibility layer over the [agent-based-decision-pipeline (abdp)](https://github.com/yeongseon/agent-based-decision-pipeline) framework (see [ADR-012](docs/adr/012-abdp-backed-core.md)). The backend is selected at runtime via:
+
+```bash
+export YOUNGGEUL_CORE_BACKEND=local   # default; preserves v0.3.0 behavior
+export YOUNGGEUL_CORE_BACKEND=abdp    # delegate to abdp (requires the [abdp] extra)
+```
+
+To install the abdp backend:
+
+```bash
+pip install -e ".[abdp]"
+```
+
+The default backend remains `local` until the M10 milestone (#245) flips it. Both backends MUST produce byte-identical JSON dumps and equivalent validation; this is enforced by the parity contract test suite (#241).
+
 ## License
 
 [Apache-2.0](LICENSE)
