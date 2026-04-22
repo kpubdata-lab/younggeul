@@ -56,6 +56,12 @@ docs = [
   "mkdocs>=1.5",
   "mkdocstrings[python]>=0.25",
 ]
+# abdp backend (Adapter Layer; see ADR-012). Optional extra so the default
+# install keeps working with the local backend. Pinned to a specific commit
+# because abdp tags v0.3.0 still ship internal __version__ "0.1.0.dev0".
+abdp = [
+  "abdp @ git+https://github.com/yeongseon/agent-based-decision-pipeline.git@bf0ab1d027602ff5cbbc9e6cba1ffa98e37404b7",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -86,6 +92,10 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = ["kpubdata", "kpubdata.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["abdp", "abdp.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
