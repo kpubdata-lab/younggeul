@@ -16,6 +16,15 @@ data/snapshots/**
 !data/.gitkeep
 eval_results/
 demo_output/
+output/
+
+# Test/coverage artifacts
+.coverage
+.coverage.*
+htmlcov/
+
+# uv lockfile (project uses `uv pip install` against pyproject; lockfile not pinned)
+uv.lock
 
 # Docs build
 site/
