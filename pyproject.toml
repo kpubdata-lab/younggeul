@@ -94,6 +94,10 @@ strict = true
 module = ["kpubdata", "kpubdata.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["abdp", "abdp.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
 testpaths = [
