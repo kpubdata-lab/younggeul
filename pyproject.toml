@@ -58,9 +58,10 @@ docs = [
 ]
 # abdp backend (Adapter Layer; see ADR-012). Optional extra so the default
 # install keeps working with the local backend. Pinned to a specific commit
-# because abdp tags v0.3.0 still ship internal __version__ "0.1.0.dev0".
+# on abdp main (post-yeongseon/agent-based-decision-pipeline#163) where
+# `abdp.__version__` correctly reports "0.3.0".
 abdp = [
-  "abdp @ git+https://github.com/yeongseon/agent-based-decision-pipeline.git@bf0ab1d027602ff5cbbc9e6cba1ffa98e37404b7",
+  "abdp @ git+https://github.com/yeongseon/agent-based-decision-pipeline.git@e695ea664926680fe456e5b409f46b39080aa40b",
 ]
 
 [tool.hatch.metadata]
