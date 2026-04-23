@@ -127,6 +127,8 @@ Hands-on inspection during the data-aliases adoption (issue #239) and a follow-u
 
 The 2026-04-23 finalization ruling (Oracle, recorded in this amendment) closed out the selective-adoption epic without flipping the default backend and without deleting any local module. The inventory below freezes the per-surface adoption decision and the parity tests that gate it. Future changes to this inventory require a new ADR or amendment.
 
+> **Path notation in this section.** For brevity the tables below use the short forms `core/...` and `apps/kr-seoul-apartment/...` to refer to the package roots. The full on-disk paths are `core/src/younggeul_core/...` and `apps/kr-seoul-apartment/src/younggeul_app_kr_seoul_apartment/...` respectively. Test paths (`core/tests/...`, `apps/kr-seoul-apartment/tests/...`) are already the actual on-disk paths.
+
 **Adopted surfaces (delegated to `abdp` and gated by parity tests)**
 
 | Surface | Local site | abdp target | Parity test |
