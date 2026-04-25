@@ -15,7 +15,7 @@ on:
       gus:
         description: "Comma-separated 5-digit MOLIT sigungu codes"
         required: false
-        default: "11680"
+        default: "11110,11140,11170,11200,11215,11230,11260,11290,11305,11320,11350,11380,11410,11440,11470,11500,11530,11545,11560,11590,11620,11650,11680,11710,11740"
       months:
         description: "Comma-separated YYYYMM months (empty = last completed UTC month)"
         required: false
@@ -56,6 +56,7 @@ jobs:
           INPUT_MONTHS: ${{ inputs.months || '' }}
           INPUT_OUTPUT_DIR: ${{ inputs.output_dir || '' }}
         run: |
+          DEFAULT_SEOUL_GUS="11110,11140,11170,11200,11215,11230,11260,11290,11305,11320,11350,11380,11410,11440,11470,11500,11530,11545,11560,11590,11620,11650,11680,11710,11740"
           last_completed_month="$(date -u -d "$(date -u +%Y-%m-01) -1 month" +%Y%m)"
 
           # NOTE: GitHub Actions runner IPs are blocked by data.go.kr (MOLIT
@@ -64,12 +65,12 @@ jobs:
           # pipeline still exercises the end-to-end path. See ADR-010.
           if [ "${{ github.event_name }}" = "schedule" ]; then
             source="fixture"
-            gus="11680"
+            gus="$DEFAULT_SEOUL_GUS"
             months="$last_completed_month"
             output_dir="output/pipeline"
           else
             source="${INPUT_SOURCE:-fixture}"
-            gus="${INPUT_GUS:-11680}"
+            gus="${INPUT_GUS:-$DEFAULT_SEOUL_GUS}"
             months="${INPUT_MONTHS:-$last_completed_month}"
             output_dir="${INPUT_OUTPUT_DIR:-output/pipeline}"
           fi
