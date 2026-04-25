@@ -12,6 +12,8 @@
 
 set -euo pipefail
 
+DEFAULT_SEOUL_GUS="11110,11140,11170,11200,11215,11230,11260,11290,11305,11320,11350,11380,11410,11440,11470,11500,11530,11545,11560,11590,11620,11650,11680,11710,11740"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -34,7 +36,7 @@ for var in KPUBDATA_DATAGO_API_KEY KPUBDATA_BOK_API_KEY KPUBDATA_KOSIS_API_KEY; 
 done
 
 DEMO_DIR="${DEMO_DIR:-./demo_output_live}"
-GU="${GU:-11680}"
+GU="${GU:-}"
 GUS="${GUS:-}"
 MONTHS="${MONTHS:-202403,202503}"
 mkdir -p "$DEMO_DIR"
@@ -42,9 +44,12 @@ mkdir -p "$DEMO_DIR"
 if [ -n "$GUS" ]; then
     GU_ARGS=(--gus "$GUS")
     echo "  gus=$GUS  months=$MONTHS"
-else
+elif [ -n "${GU:-}" ]; then
     GU_ARGS=(--gu "$GU")
     echo "  gu=$GU   months=$MONTHS"
+else
+    GU_ARGS=(--gus "$DEFAULT_SEOUL_GUS")
+    echo "  gus=$DEFAULT_SEOUL_GUS  months=$MONTHS"
 fi
 
 echo "[1/3] Ingesting live data..."
