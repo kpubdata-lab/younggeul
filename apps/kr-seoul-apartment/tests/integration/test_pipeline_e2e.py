@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
+from younggeul_app_kr_seoul_apartment.canonical import SEOUL_GU_CODES
 from younggeul_app_kr_seoul_apartment.pipeline import BronzeInput, PipelineResult, run_pipeline
 from younggeul_core.state.bronze import BronzeAptTransaction, BronzeInterestRate, BronzeMigration
 
@@ -230,3 +231,20 @@ class TestPipelineEmptyInput:
         assert result.silver.interest_rates == []
         assert result.silver.migrations == []
         assert result.gold == []
+
+
+class TestPipelineAllSeoulDistricts:
+    def test_pipeline_emits_one_gold_row_per_seoul_gu(self) -> None:
+        bronze = BronzeInput(
+            apt_transactions=[
+                _make_bronze_apt(serial_number=f"2025-{index:03d}", sgg_code=code)
+                for index, code in enumerate(SEOUL_GU_CODES, start=1)
+            ],
+            interest_rates=[_make_bronze_rate()],
+            migrations=[_make_bronze_migration()],
+        )
+
+        result = run_pipeline(bronze)
+
+        assert len(result.gold) == len(SEOUL_GU_CODES)
+        assert {row.gu_code for row in result.gold} == set(SEOUL_GU_CODES)
