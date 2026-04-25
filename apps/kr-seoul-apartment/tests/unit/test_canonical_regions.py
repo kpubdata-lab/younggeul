@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from importlib import import_module
 from types import MappingProxyType
 
-from younggeul_app_kr_seoul_apartment.canonical.regions import (
-    SEOUL_GU_CODES,
-    SEOUL_GU_CODE_TO_NAME,
-    SEOUL_GU_NAME_TO_CODE,
-)
+regions = import_module("younggeul_app_kr_seoul_apartment.canonical.regions")
+
+SEOUL_GU_CODES = regions.SEOUL_GU_CODES
+SEOUL_GU_CODE_TO_NAME = regions.SEOUL_GU_CODE_TO_NAME
+SEOUL_GU_NAME_TO_CODE = regions.SEOUL_GU_NAME_TO_CODE
 
 
 def test_seoul_gu_codes_are_complete_and_sorted() -> None:
